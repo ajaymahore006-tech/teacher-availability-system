@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block nav_links %}
+<button id="logoutBtn" class="btn btn-outline-danger">Logout</button>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container fade-in-up">
+    <div class="dashboard-header d-flex justify-between align-center mb-4 glass-card">
+        <div>
+            <h2 id="teacherNameDisplay">Welcome, Teacher</h2>
+            <p id="teacherDeptDisplay" class="text-muted"></p>
+        </div>
+        <div class="status-toggle-container">
+            <span class="mr-2 font-bold">Current Status:</span>
+            <select id="statusSelect" class="form-control d-inline-block w-auto">
+                <option value="Available for Students">Available for Students</option>
+                <option value="Not Available">Not Available</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <h3 class="mb-3">Pending Requests</h3>
+        
+        <div id="requestsContainer" class="requests-list">
+            <!-- Requests injected here -->
+            <div class="glass-card text-center text-muted py-4" id="emptyState">
+                No pending requests.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
