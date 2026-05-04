@@ -3,7 +3,7 @@ function showToast(message, type = 'info') {
     let bgColor = "linear-gradient(to right, #3b82f6, #2563eb)"; // default info/primary
     if (type === 'success') bgColor = "linear-gradient(to right, #10b981, #059669)";
     if (type === 'error') bgColor = "linear-gradient(to right, #ef4444, #dc2626)";
-    
+
     Toastify({
         text: message,
         duration: 3000,
@@ -24,7 +24,7 @@ async function apiCall(url, method = 'GET', body = null) {
         headers: { 'Content-Type': 'application/json' },
     };
     if (body) options.body = JSON.stringify(body);
-    
+
     try {
         const response = await fetch(url, options);
         const data = await response.json();
@@ -54,10 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const deptSelect = document.getElementById('deptSelect');
     const teachersContainer = document.getElementById('teachersContainer');
     const requestModal = document.getElementById('requestModal');
-    
+
     if (deptSelect && teachersContainer) {
         let globalData = {};
-        
+
         // Load Data
         async function loadStudentData() {
             const res = await apiCall('/api/data');
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 populateDepartments(globalData);
             }
         }
-        
+
         function populateDepartments(data) {
             deptSelect.innerHTML = '<option value="" disabled selected>Choose Department...</option>';
             Object.keys(data).forEach(dept => {
@@ -76,27 +76,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 deptSelect.appendChild(opt);
             });
         }
-        
+
         deptSelect.addEventListener('change', (e) => {
             const dept = e.target.value;
             renderTeachers(dept);
         });
-        
+
         function renderTeachers(dept) {
             teachersContainer.innerHTML = '';
             const teachers = globalData[dept] || [];
-            
+
             if (teachers.length === 0) {
                 teachersContainer.innerHTML = '<p class="text-muted">No teachers found.</p>';
                 return;
             }
-            
+
             teachers.forEach((t) => {
                 const isAvailable = t.status === "Available for Students";
                 const badgeClass = isAvailable ? 'status-available' : 'status-unavailable';
                 const qLen = t.requests ? t.requests.length : 0;
                 const qText = qLen === 0 ? "Queue is empty." : `${qLen} student(s) in queue.`;
-                
+
                 const card = document.createElement('div');
                 card.className = 'glass-card teacher-card hover-lift fade-in-up';
                 card.innerHTML = `
@@ -112,14 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 teachersContainer.appendChild(card);
             });
         }
-        
+
         loadStudentData();
-        
+
         // Modal Logic
         const closeModal = document.getElementById('closeModal');
         const requestForm = document.getElementById('requestForm');
-        
-        window.openRequestModal = function(dept, id, name) {
+
+        window.openRequestModal = function (dept, id, name) {
             document.getElementById('reqDept').value = dept;
             document.getElementById('reqTeacherId').value = id;
             document.getElementById('modalTeacherName').textContent = "Requesting: " + name;
@@ -128,17 +128,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('reqDoubt').value = '';
             requestModal.style.display = 'flex';
         };
-        
+
         closeModal.addEventListener('click', () => {
             requestModal.style.display = 'none';
         });
-        
-        window.onclick = function(event) {
+
+        window.onclick = function (event) {
             if (event.target == requestModal) {
                 requestModal.style.display = "none";
             }
         };
-        
+
         requestForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = {
@@ -148,16 +148,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 roll_no: document.getElementById('reqRoll').value,
                 doubt: document.getElementById('reqDoubt').value
             };
-            
+
             const btn = requestForm.querySelector('button');
             btn.disabled = true;
             btn.textContent = "Sending...";
-            
+
             const res = await apiCall('/api/request', 'POST', payload);
-            
+
             btn.disabled = false;
             btn.textContent = "Submit Request";
-            
+
             if (res.ok) {
                 requestModal.style.display = 'none';
                 let pos = res.data.position;
@@ -179,15 +179,15 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const dept = document.getElementById('loginDept').value;
-            const teacher_id = document.getElementById('loginId').value;
+            const teacher_id = document.getElementById('loginIdOrName').value;
             const password = document.getElementById('loginPass').value;
-            
+
             const btn = document.getElementById('loginBtn');
             btn.disabled = true;
             btn.querySelector('.btn-text').textContent = 'Logging in...';
-            
+
             const res = await apiCall('/api/login', 'POST', { dept, teacher_id, password });
-            
+
             if (res.ok) {
                 window.location.href = '/teacher/dashboard';
             } else {
@@ -195,6 +195,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.disabled = false;
                 btn.querySelector('.btn-text').textContent = 'Login';
             }
+        });
+    }
+
+    // --- STUDENT LOGIN ---
+    const studentLoginForm = document.getElementById('studentLoginForm');
+    if (studentLoginForm) {
+        studentLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('studentEmail').value;
+            const password = document.getElementById('studentPass').value;
+
+            const btn = document.getElementById('studentLoginBtn');
+            btn.disabled = true;
+            btn.querySelector('.btn-text').textContent = 'Logging in...';
+
+            const res = await apiCall('/api/student/login', 'POST', { email, password });
+
+            if (res.ok) {
+                window.location.href = '/student';
+            } else {
+                showToast(res.data.message, 'error');
+                btn.disabled = false;
+                btn.querySelector('.btn-text').textContent = 'Login';
+            }
+        });
+    }
+
+    // --- STUDENT LOGOUT ---
+    const studentLogoutBtn = document.getElementById('studentLogoutBtn');
+    if (studentLogoutBtn) {
+        studentLogoutBtn.addEventListener('click', async () => {
+            await apiCall('/api/logout', 'POST');
+            window.location.href = '/';
         });
     }
 
@@ -207,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const requestsContainer = document.getElementById('requestsContainer');
         const emptyState = document.getElementById('emptyState');
         const logoutBtn = document.getElementById('logoutBtn');
-        
+
         async function loadDashboard() {
             const res = await apiCall('/api/teacher/me');
             if (res.ok) {
@@ -215,13 +248,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 nameDisplay.textContent = `Welcome, ${t.name}`;
                 deptDisplay.textContent = `Department: ${t.id} (Dept)`;
                 statusSelect.value = t.status;
-                
+
                 renderRequests(t.requests || []);
             } else {
                 window.location.href = '/teacher/login';
             }
         }
-        
+
         function renderRequests(reqs) {
             // keep the empty state element around
             requestsContainer.innerHTML = '';
@@ -230,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 emptyState.style.display = 'block';
                 return;
             }
-            
+
             emptyState.style.display = 'none';
             reqs.forEach((r, idx) => {
                 const card = document.createElement('div');
@@ -248,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 requestsContainer.appendChild(card);
             });
         }
-        
+
         statusSelect.addEventListener('change', async (e) => {
             const newStatus = e.target.value;
             const res = await apiCall('/api/status', 'POST', { status: newStatus });
@@ -260,8 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadDashboard(); // revert visual change
             }
         });
-        
-        window.handleRequest = async function(action, index) {
+
+        window.handleRequest = async function (action, index) {
             const res = await apiCall('/api/manage_request', 'POST', { action, index });
             if (res.ok) {
                 showToast(res.data.message, 'success');
@@ -270,14 +303,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast(res.data.message, 'error');
             }
         };
-        
+
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
                 await apiCall('/api/logout', 'POST');
                 window.location.href = '/';
             });
         }
-        
+
         loadDashboard();
         // Auto refresh requests every 5 seconds if available
         setInterval(() => {

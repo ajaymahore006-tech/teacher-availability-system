@@ -10,6 +10,7 @@ app.secret_key = 'super_secret_key_for_teacher_availability_app' # Change this i
 FILE_NAME = "teachers_data.json"
 LOG_FILE = "status_log.csv"
 BACKUP_FILE = "status_log_backup.csv"
+STUDENTS_FILE = "students_data.json"
 
 # -------------------- DATA MANAGEMENT --------------------
 
@@ -62,6 +63,20 @@ def save_data(data):
     with open(FILE_NAME, "w") as f:
         json.dump(data, f, indent=4)
 
+def create_initial_students_data():
+    data = {
+        "student1@example.com": {"password": "password123", "name": "Ajay Mahore", "roll_no": "MIS101"},
+        "student2@example.com": {"password": "password123", "name": "Jane Doe", "roll_no": "MIS102"}
+    }
+    with open(STUDENTS_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+def load_students_data():
+    if not os.path.exists(STUDENTS_FILE):
+        create_initial_students_data()
+    with open(STUDENTS_FILE, "r") as f:
+        return json.load(f)
+
 def log_status(dept, teacher):
     time_now = datetime.datetime.now()
     with open(LOG_FILE, "a") as f:
@@ -81,7 +96,15 @@ def index():
 
 @app.route('/student')
 def student():
+    if 'student_email' not in session:
+        return redirect(url_for('student_login_page'))
     return render_template('student.html')
+
+@app.route('/student/login')
+def student_login_page():
+    if 'student_email' in session:
+        return redirect(url_for('student'))
+    return render_template('student_login.html')
 
 @app.route('/teacher/login')
 def teacher_login():
@@ -120,13 +143,39 @@ def login():
 
     if dept in data:
         for teacher in data[dept]:
-            if teacher['id'] == teacher_id and teacher['password'] == password:
-                session['teacher_id'] = teacher_id
+            if (teacher['id'] == teacher_id or teacher['name'] == teacher_id) and teacher['password'] == password:
+                session['teacher_id'] = teacher['id']
                 session['dept'] = dept
                 session['teacher_name'] = teacher['name']
                 return jsonify({"success": True, "message": "Login successful"})
     
-    return jsonify({"success": False, "message": "Invalid department, ID, or password."}), 401
+    return jsonify({"success": False, "message": "Invalid department, ID/Name, or password."}), 401
+
+import re
+
+@app.route('/api/student/login', methods=['POST'])
+def student_login_api():
+    req = request.json
+    email = req.get('email')
+    password = req.get('password')
+
+    if not email or not password:
+        return jsonify({"success": False, "message": "Email and password are required"}), 400
+        
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return jsonify({"success": False, "message": "Invalid email format"}), 400
+
+    students = load_students_data()
+    if email in students:
+        if students[email]["password"] == password:
+            session['student_email'] = email
+            session['student_name'] = students[email]["name"]
+            session['student_roll'] = students[email]["roll_no"]
+            return jsonify({"success": True, "message": "Login successful"})
+        else:
+            return jsonify({"success": False, "message": "Invalid password."}), 401
+    
+    return jsonify({"success": False, "message": "Email not found in student database."}), 401
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
@@ -249,4 +298,5 @@ def backup_logs():
 if __name__ == '__main__':
     # Initialize data if not present
     load_data()
+    load_students_data()
     app.run(debug=True, port=5000)

@@ -4,6 +4,7 @@
 
 {% block nav_links %}
 <a href="{{ url_for('index') }}" class="btn btn-outline">Back to Home</a>
+<button class="btn btn-outline" id="studentLogoutBtn" style="margin-left: 10px;">Logout</button>
 {% endblock %}
 
 {% block content %}
@@ -42,11 +43,13 @@
                 <input type="hidden" id="reqTeacherId">
                 <div class="form-group">
                     <label>Your Name</label>
-                    <input type="text" id="reqName" class="form-control" required>
+                    <input type="text" id="reqName" class="form-control" value="{{ session.get('student_name', '') }}"
+                        readonly required>
                 </div>
                 <div class="form-group">
                     <label>Roll Number</label>
-                    <input type="text" id="reqRoll" class="form-control" required>
+                    <input type="text" id="reqRoll" class="form-control" value="{{ session.get('student_roll', '') }}"
+                        readonly required>
                 </div>
                 <div class="form-group">
                     <label>Doubt/Question</label>

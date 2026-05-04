@@ -4,14 +4,8 @@
             "id": "t1",
             "name": "Prof. Sumit Gupta",
             "password": "123",
-            "status": "Available for Students",
-            "requests": [
-                {
-                    "name": "Akash Mahore",
-                    "roll_no": "112415122",
-                    "doubt": "doubt about DFA"
-                }
-            ]
+            "status": "Not Available",
+            "requests": []
         },
         {
             "id": "t2",
@@ -24,14 +18,14 @@
             "id": "t3",
             "name": "Prof. Shamal Kashid",
             "password": "123",
-            "status": "Not Available",
+            "status": "Available for Students",
             "requests": []
         },
         {
             "id": "t4",
             "name": "Prof. Anagha Kishte",
             "password": "123",
-            "status": "Not Available",
+            "status": "Available for Students",
             "requests": []
         },
         {
@@ -68,20 +62,14 @@
             "id": "t9",
             "name": "Prof. Sanjeev Sharma",
             "password": "123",
-            "status": "Available for Students",
-            "requests": [
-                {
-                    "name": "Atharva Kadam",
-                    "roll_no": "112416019",
-                    "doubt": "want a see mid sem marks"
-                }
-            ]
+            "status": "Not Available",
+            "requests": []
         },
         {
             "id": "t10",
             "name": "Prof. Sanga Chaki",
             "password": "123",
-            "status": "Not Available",
+            "status": "Available for Students",
             "requests": []
         },
         {
