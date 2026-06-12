@@ -1,92 +1,85 @@
-import json
 import os
 import datetime
-import shutil
+import re
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_key_for_teacher_availability_app' # Change this in production
+app.secret_key = os.getenv('SECRET_KEY', 'super_secret_key_for_teacher_availability_app')
 
-FILE_NAME = "teachers_data.json"
-LOG_FILE = "status_log.csv"
+# Database configuration
+db_host = os.getenv("DB_HOST", "localhost")
+db_port = os.getenv("DB_PORT", "3306")
+db_user = os.getenv("DB_USER", "root")
+db_password = os.getenv("DB_PASSWORD", "")
+db_name = os.getenv("DB_NAME", "teacher_availability")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
 BACKUP_FILE = "status_log_backup.csv"
-STUDENTS_FILE = "students_data.json"
 
-# -------------------- DATA MANAGEMENT --------------------
+# -------------------- DATABASE MODELS --------------------
 
-def create_initial_data():
-    data = {
-        "Dept1": [
-            {"id": "t1", "name": "Prof. Sumit Gupta", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t2", "name": "Prof. Mahendrapratap Yadav", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t3", "name": "Prof. Shamal Kashid", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t4", "name": "Prof. Anagha Kishte", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t5", "name": "Prof. Kaptan Singh", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t6", "name": "Prof. Mahesh Joshi", "password": "123", "status": "Not Available", "requests": []},
-        ],
-        "Dept2": [
-            {"id": "t7", "name": "Prof. Dheeraj Dubey", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t8", "name": "Prof. Bhupendra Singh", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t9", "name": "Prof. Sanjeev Sharma", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t10", "name": "Prof. Sanga Chaki", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t11", "name": "Prof. Shrikant Salve", "password": "123", "status": "Not Available", "requests": []},
-            {"id": "t12", "name": "Prof. Habila Basumatari", "password": "123", "status": "Not Available", "requests": []},
-        ],
-    }
-    with open(FILE_NAME, "w") as f:
-        json.dump(data, f, indent=4)
+class Department(db.Model):
+    __tablename__ = 'departments'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    teachers = db.relationship('Teacher', backref='department', lazy=True)
 
-def load_data():
-    if not os.path.exists(FILE_NAME):
-        create_initial_data()
+class Student(db.Model):
+    __tablename__ = 'students'
+    email = db.Column(db.String(191), primary_key=True)
+    password = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    roll_no = db.Column(db.String(50), unique=True, nullable=False)
 
-    with open(FILE_NAME, "r") as f:
-        data = json.load(f)
+class Teacher(db.Model):
+    __tablename__ = 'teachers'
+    id = db.Column(db.String(50), primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    status = db.Column(db.String(50), default='Not Available')
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id', ondelete='CASCADE'), nullable=False)
+    requests = db.relationship('Request', backref='teacher', cascade="all, delete-orphan", lazy=True)
 
-    # Ensure "requests" key exists and clean up whitespace in status
-    modified = False
-    for dept in data:
-        for teacher in data[dept]:
-            if "requests" not in teacher:
-                teacher["requests"] = []
-                modified = True
-            if teacher.get("status") == "Available ":
-                teacher["status"] = "Available for Students"
-                modified = True
-    
-    if modified:
-        save_data(data)
+class Request(db.Model):
+    __tablename__ = 'requests'
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.String(50), db.ForeignKey('teachers.id', ondelete='CASCADE'), nullable=False)
+    student_name = db.Column(db.String(100), nullable=False)
+    student_roll_no = db.Column(db.String(50), nullable=False)
+    doubt = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    return data
+class StatusLog(db.Model):
+    __tablename__ = 'status_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_name = db.Column(db.String(100), nullable=False)
+    department = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    logged_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-def save_data(data):
-    with open(FILE_NAME, "w") as f:
-        json.dump(data, f, indent=4)
-
-def create_initial_students_data():
-    data = {
-        "student1@example.com": {"password": "password123", "name": "Ajay Mahore", "roll_no": "MIS101"},
-        "student2@example.com": {"password": "password123", "name": "Jane Doe", "roll_no": "MIS102"}
-    }
-    with open(STUDENTS_FILE, "w") as f:
-        json.dump(data, f, indent=4)
-
-def load_students_data():
-    if not os.path.exists(STUDENTS_FILE):
-        create_initial_students_data()
-    with open(STUDENTS_FILE, "r") as f:
-        return json.load(f)
-
-def log_status(dept, teacher):
-    time_now = datetime.datetime.now()
-    with open(LOG_FILE, "a") as f:
-        f.write(f"{teacher['name']},{dept},{teacher['status']},{time_now}\n")
+# -------------------- HELPER FUNCTIONS --------------------
 
 def backup_logs_func():
-    if os.path.exists(LOG_FILE):
-        shutil.copy(LOG_FILE, BACKUP_FILE)
+    try:
+        logs = StatusLog.query.all()
+        import csv
+        with open(BACKUP_FILE, "w", newline="") as f:
+            writer = csv.writer(f)
+            for log in logs:
+                writer.writerow([log.teacher_name, log.department, log.status, log.logged_at])
         return True
-    return False
+    except Exception as e:
+        print(f"Error backing up logs: {e}")
+        return False
 
 # -------------------- ROUTES --------------------
 
@@ -122,36 +115,47 @@ def teacher_dashboard():
 
 @app.route('/api/data', methods=['GET'])
 def get_data():
-    data = load_data()
-    # Remove passwords from response
+    departments = Department.query.all()
     safe_data = {}
-    for dept, teachers in data.items():
-        safe_data[dept] = []
-        for t in teachers:
-            safe_t = t.copy()
-            safe_t.pop('password', None)
-            safe_data[dept].append(safe_t)
+    for dept in departments:
+        safe_data[dept.name] = []
+        for t in dept.teachers:
+            safe_data[dept.name].append({
+                "id": t.id,
+                "name": t.name,
+                "status": t.status,
+                "requests": [
+                    {
+                        "name": r.student_name,
+                        "roll_no": r.student_roll_no,
+                        "doubt": r.doubt
+                    } for r in t.requests
+                ]
+            })
     return jsonify(safe_data)
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    data = load_data()
     req = request.json
-    dept = req.get('dept')
+    dept_name = req.get('dept')
     teacher_id = req.get('teacher_id')
     password = req.get('password')
 
-    if dept in data:
-        for teacher in data[dept]:
-            if (teacher['id'] == teacher_id or teacher['name'] == teacher_id) and teacher['password'] == password:
-                session['teacher_id'] = teacher['id']
-                session['dept'] = dept
-                session['teacher_name'] = teacher['name']
-                return jsonify({"success": True, "message": "Login successful"})
+    dept = Department.query.filter_by(name=dept_name).first()
+    if dept:
+        teacher = Teacher.query.filter(
+            (Teacher.id == teacher_id) | (Teacher.name == teacher_id),
+            Teacher.department_id == dept.id,
+            Teacher.password == password
+        ).first()
+        
+        if teacher:
+            session['teacher_id'] = teacher.id
+            session['dept'] = dept.name
+            session['teacher_name'] = teacher.name
+            return jsonify({"success": True, "message": "Login successful"})
     
     return jsonify({"success": False, "message": "Invalid department, ID/Name, or password."}), 401
-
-import re
 
 @app.route('/api/student/login', methods=['POST'])
 def student_login_api():
@@ -165,12 +169,12 @@ def student_login_api():
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return jsonify({"success": False, "message": "Invalid email format"}), 400
 
-    students = load_students_data()
-    if email in students:
-        if students[email]["password"] == password:
+    student = Student.query.filter_by(email=email).first()
+    if student:
+        if student.password == password:
             session['student_email'] = email
-            session['student_name'] = students[email]["name"]
-            session['student_roll'] = students[email]["roll_no"]
+            session['student_name'] = student.name
+            session['student_roll'] = student.roll_no
             return jsonify({"success": True, "message": "Login successful"})
         else:
             return jsonify({"success": False, "message": "Invalid password."}), 401
@@ -187,15 +191,23 @@ def get_me():
     if 'teacher_id' not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
     
-    data = load_data()
-    dept = session['dept']
     teacher_id = session['teacher_id']
+    teacher = Teacher.query.get(teacher_id)
     
-    for teacher in data.get(dept, []):
-        if teacher['id'] == teacher_id:
-            safe_t = teacher.copy()
-            safe_t.pop('password', None)
-            return jsonify({"success": True, "teacher": safe_t})
+    if teacher:
+        safe_t = {
+            "id": teacher.id,
+            "name": teacher.name,
+            "status": teacher.status,
+            "requests": [
+                {
+                    "name": r.student_name,
+                    "roll_no": r.student_roll_no,
+                    "doubt": r.doubt
+                } for r in teacher.requests
+            ]
+        }
+        return jsonify({"success": True, "teacher": safe_t})
             
     return jsonify({"success": False, "message": "Teacher not found"}), 404
 
@@ -210,18 +222,23 @@ def update_status():
     if new_status not in ["Available for Students", "Not Available"]:
         return jsonify({"success": False, "message": "Invalid status"}), 400
         
-    data = load_data()
-    dept = session['dept']
     teacher_id = session['teacher_id']
+    teacher = Teacher.query.get(teacher_id)
     
-    for teacher in data.get(dept, []):
-        if teacher['id'] == teacher_id:
-            teacher['status'] = new_status
-            if new_status == "Not Available":
-                teacher['requests'] = [] # Clear requests when unavailable
-            save_data(data)
-            log_status(dept, teacher)
-            return jsonify({"success": True, "message": "Status updated"})
+    if teacher:
+        teacher.status = new_status
+        if new_status == "Not Available":
+            Request.query.filter_by(teacher_id=teacher_id).delete()
+        
+        log = StatusLog(
+            teacher_name=teacher.name,
+            department=session['dept'],
+            status=new_status,
+            logged_at=datetime.datetime.now()
+        )
+        db.session.add(log)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Status updated"})
             
     return jsonify({"success": False, "message": "Teacher not found"}), 404
 
@@ -237,24 +254,22 @@ def submit_request():
     if not all([dept, teacher_id, name, roll_no, doubt]):
         return jsonify({"success": False, "message": "Missing fields"}), 400
         
-    data = load_data()
-    
-    for teacher in data.get(dept, []):
-        if teacher['id'] == teacher_id:
-            if teacher['status'] != "Available for Students":
-                return jsonify({"success": False, "message": "Teacher is not available."}), 400
-                
-            if "requests" not in teacher:
-                teacher["requests"] = []
-                
-            teacher["requests"].append({
-                "name": name,
-                "roll_no": roll_no,
-                "doubt": doubt
-            })
-            save_data(data)
-            position = len(teacher["requests"]) - 1
-            return jsonify({"success": True, "position": position})
+    teacher = Teacher.query.get(teacher_id)
+    if teacher:
+        if teacher.status != "Available for Students":
+            return jsonify({"success": False, "message": "Teacher is not available."}), 400
+            
+        new_request = Request(
+            teacher_id=teacher_id,
+            student_name=name,
+            student_roll_no=roll_no,
+            doubt=doubt
+        )
+        db.session.add(new_request)
+        db.session.commit()
+        
+        position = Request.query.filter_by(teacher_id=teacher_id).count() - 1
+        return jsonify({"success": True, "position": position})
             
     return jsonify({"success": False, "message": "Teacher not found"}), 404
 
@@ -270,21 +285,21 @@ def manage_request():
     if action not in ["accept", "skip"]:
         return jsonify({"success": False, "message": "Invalid action"}), 400
         
-    data = load_data()
-    dept = session['dept']
     teacher_id = session['teacher_id']
+    teacher = Teacher.query.get(teacher_id)
     
-    for teacher in data.get(dept, []):
-        if teacher['id'] == teacher_id:
-            if not teacher.get("requests") or index >= len(teacher["requests"]):
-                return jsonify({"success": False, "message": "Invalid request index"}), 400
-                
-            if action == "accept":
-                teacher["requests"].pop(index)
-                save_data(data)
-                return jsonify({"success": True, "message": "Request resolved and removed."})
-            elif action == "skip":
-                return jsonify({"success": True, "message": "Request skipped."})
+    if teacher:
+        requests = Request.query.filter_by(teacher_id=teacher_id).order_by(Request.id).all()
+        if not requests or index >= len(requests):
+            return jsonify({"success": False, "message": "Invalid request index"}), 400
+            
+        if action == "accept":
+            req_to_remove = requests[index]
+            db.session.delete(req_to_remove)
+            db.session.commit()
+            return jsonify({"success": True, "message": "Request resolved and removed."})
+        elif action == "skip":
+            return jsonify({"success": True, "message": "Request skipped."})
                 
     return jsonify({"success": False, "message": "Teacher not found"}), 404
 
@@ -296,7 +311,7 @@ def backup_logs():
     return jsonify({"success": False, "message": "No log file found to backup."}), 404
 
 if __name__ == '__main__':
-    # Initialize data if not present
-    load_data()
-    load_students_data()
+    with app.app_context():
+        db.create_all()
     app.run(debug=True, port=5000)
+
