@@ -27,7 +27,18 @@ teacher-availability-system/
 ├── requirements.txt
 └── README.md
 ```
+## Environment Variables
 
+Create a `.env` file in the project root directory and add the following variables:
+
+```env
+DB_HOST=localhost
+DB_USER=your_username
+DB_PASSWORD=your_password
+DB_NAME=teacher_availability
+```
+
+Update the values according to your local MySQL configuration.
 ## How to Run
 1. Clone the repository
 2. Install dependencies:
