@@ -1,30 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Faculty Availability System - Home{% endblock %}
-
-{% block nav_links %}
-<button class="btn btn-outline" id="backupBtn">Backup Logs</button>
+{% block title %}
+Home
 {% endblock %}
 
 {% block content %}
-<div class="hero-section">
-    <div class="hero-text text-center fade-in-up">
-        <h1 class="hero-title">Faculty Availability System</h1>
-        <p class="hero-subtitle">Phase 2: Streamlined communication between students and faculty.</p>
-    </div>
 
-    <div class="role-selection-grid mt-4">
-        <a href="{{ url_for('student') }}" class="role-card glass-card hover-lift">
-            <div class="role-icon">👨‍🎓</div>
-            <h2>Student Portal</h2>
-            <p>View teacher availability and send doubt requests.</p>
-        </a>
+<h1>
+    Welcome
+</h1>
 
-        <a href="{{ url_for('teacher_login') }}" class="role-card glass-card hover-lift">
-            <div class="role-icon">👨‍🏫</div>
-            <h2>Teacher Portal</h2>
-            <p>Manage your availability and answer student doubts.</p>
-        </a>
-    </div>
-</div>
+<p>
+    Teacher Availability System built with FastAPI.
+</p>
+
 {% endblock %}

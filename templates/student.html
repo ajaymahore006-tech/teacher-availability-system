@@ -3,7 +3,7 @@
 {% block title %}Student Portal{% endblock %}
 
 {% block nav_links %}
-<a href="{{ url_for('index') }}" class="btn btn-outline">Back to Home</a>
+<a href="{{ request.url_for('index') }}" class="btn btn-outline">Back to Home</a>
 <button class="btn btn-outline" id="studentLogoutBtn" style="margin-left: 10px;">Logout</button>
 {% endblock %}
 
