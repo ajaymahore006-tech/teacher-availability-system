@@ -1,29 +1,23 @@
-from pydantic import BaseModel, field_validator
-import re
+from pydantic import BaseModel
 
-
-# Schema for data coming IN (creating a student)
+# 1. The Base Class (Shared Fields)
 class StudentBase(BaseModel):
     email: str
     name: str
-    roll_no: str
-
-    @field_validator("email")
-    @classmethod
-    def validate_college_email(cls, value):
-        pattern = r"^\d+@(cse|ece)\.iiitp\.ac\.in$"
-
-        if not re.match(pattern, value):
-            raise ValueError("Only IIITP college email addresses are allowed.")
-        return value
-
-
-# 2. Inherit for Creation (Add the sensitive password)
-class Student_Create(StudentBase):
-    password = str
-
+    roll_no: int
 
 # 3. Inherit for Response (Keep password out)
-class Student_response(StudentBase):
+class StudentResponse(StudentBase):
     class Config:
         from_attribute = True
+
+
+# Add this to schemas/student.py
+class StudentLogin(BaseModel):
+    email: str
+    password: str
+
+class StudentPasswordReset(BaseModel):
+    email: str
+    otp: str
+    new_password: str    

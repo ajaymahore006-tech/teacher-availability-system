@@ -1,9 +1,9 @@
 from sqlalchemy import Column, String, Integer, ForeignKey, Text, DateTime
 from sqlalchemy.orm import relationship
 import datetime
-from database import Base
+from app.database import Base
 
-class Request():
+class Request(Base):
     __tablename__ = "requests"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -11,7 +11,7 @@ class Request():
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     # foreign keys
-    teacher_id = Column(String(50), ForeignKey('teacher.id', ondelete="CASCADE"), nullable=False)
+    teacher_id = Column(String(50), ForeignKey('teachers.id', ondelete="CASCADE"), nullable=False)
     student_email = Column(String(191), ForeignKey('students.email', ondelete="CASCADE"), nullable=False)
 
     # Relationships

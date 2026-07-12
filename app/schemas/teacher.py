@@ -1,10 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 # 1. The Base Class (Shared Fields)
 class TeacherBase(BaseModel):
     id: str
     name: str
+    email:EmailStr
     department_id: int
 
 # 2. Inherit for Creation (Add password and default status)
@@ -19,3 +20,11 @@ class TeacherResponse(TeacherBase):
 
     class Config:
         from_attributes = True        
+
+
+class TeacherLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class TeacherStatusUpdate(BaseModel):
+    status: str  # This will hold "Available" or "Not Available"    

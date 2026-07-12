@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String
-from database import Base
+from app.database import Base
 from sqlalchemy.orm import relationship
 
 
-class Student:
+class Student(Base):
     __tablename__ = "students"
 
     email = Column(String(191), primary_key=True, index=True)
