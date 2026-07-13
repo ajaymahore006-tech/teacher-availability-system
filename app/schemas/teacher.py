@@ -28,3 +28,10 @@ class TeacherLogin(BaseModel):
 
 class TeacherStatusUpdate(BaseModel):
     status: str  # This will hold "Available" or "Not Available"    
+
+
+class TeacherPublic(TeacherBase):
+    status: str
+
+    class Config:
+        from_attributes = True

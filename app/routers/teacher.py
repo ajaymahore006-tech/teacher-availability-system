@@ -1,35 +1,37 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.teacher import Teacher   
-from app.schemas.teacher import TeacherLogin  
-from app.utils.security import verify_password, create_access_token, get_password_hash, get_current_teacher
+from app.models.teacher import Teacher
+from app.schemas.teacher import TeacherLogin
+from app.utils.security import (
+    verify_password,
+    create_access_token,
+    get_password_hash,
+    get_current_teacher,
+)
 
 # This creates the router we will connect later
 router = APIRouter(prefix="/api/teacher", tags=["Teacher"])
 
+
 @router.post("/login")
 def teacher_login(credentials: TeacherLogin, db: Session = Depends(get_db)):
-    
+
     # 1. Look for the teacher in the database
     teacher = db.query(Teacher).filter(Teacher.email == credentials.email).first()
     if not teacher:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Invalid Credentials"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Credentials"
         )
 
     # 2. Check if the password matches the hashed password
     if not verify_password(credentials.password, teacher.password):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Invalid Credentials"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Credentials"
         )
 
     # 3. Hand them a VIP wristband with the "teacher" label!
-    access_token = create_access_token(
-        data={"sub": teacher.email, "role": "teacher"}
-    )
+    access_token = create_access_token(data={"sub": teacher.email, "role": "teacher"})
 
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -38,7 +40,9 @@ def teacher_login(credentials: TeacherLogin, db: Session = Depends(get_db)):
 @router.post("/setup-dummy-teacher")
 def setup_teacher(db: Session = Depends(get_db)):
     # Check if the dummy teacher already exists
-    existing = db.query(Teacher).filter(Teacher.email == "faculty@cse.iiitp.ac.in").first()
+    existing = (
+        db.query(Teacher).filter(Teacher.email == "faculty@cse.iiitp.ac.in").first()
+    )
     if existing:
         return {"message": "Dummy teacher already exists!"}
 
@@ -47,24 +51,39 @@ def setup_teacher(db: Session = Depends(get_db)):
         name="Dr. Smith",
         email="faculty@cse.iiitp.ac.in",
         password=get_password_hash("securepass123"),
-        department_id=1 
+        department_id=1,
     )
     db.add(new_teacher)
     db.commit()
-    return {"message": "Teacher created! Email: faculty@cse.iiitp.ac.in | Pass: securepass123"}
+    return {
+        "message": "Teacher created! Email: faculty@cse.iiitp.ac.in | Pass: securepass123"
+    }
 
 
-from app.schemas.teacher import TeacherStatusUpdate
+from app.schemas.teacher import TeacherStatusUpdate, TeacherPublic
 
-@router.put("/update-status") 
+
+@router.put("/update-status")
 def update_teacher_status(
-    status_data: TeacherStatusUpdate, 
+    status_data: TeacherStatusUpdate,
     db: Session = Depends(get_db),
-    current_teacher = Depends(get_current_teacher) # This checks the token!
+    current_teacher=Depends(get_current_teacher),  # This checks the token!
 ):
     # 1. Update the teacher's status in the database
     current_teacher.status = status_data.status
     db.commit()
     db.refresh(current_teacher)
-    
+
     return {"message": f"Status updated to {current_teacher.status}"}
+
+
+from typing import List
+
+
+@router.get("/list", response_model=List[TeacherPublic])
+def get_all_teachers(db: Session = Depends(get_db)):
+    # 1. Fetch ALL teachers from the database
+    teachers = db.query(Teacher).all()
+
+    # 2. Return them (FastAPI will automatically filter them through TeacherPublic)
+    return teachers
