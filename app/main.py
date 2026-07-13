@@ -7,6 +7,7 @@ from app.models import student as student_model
 from app.models import request as request_model
 from app.models import teacher as teacher_model
 from app.models import department as department_model
+from app.models.appointment import Appointment as student_appointment
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)

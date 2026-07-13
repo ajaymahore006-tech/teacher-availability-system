@@ -57,11 +57,7 @@ def send_registration_otp(request: OTPRequest, db: Session = Depends(get_db)):
 
 
 # (The /signup and /login routes will go below this)
-
-
-@router.post(
-    "/signup", response_model=StudentResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/signup", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
 def register_student(request: StudentSignupWithOTP, db: Session = Depends(get_db)):
     # 1. Fetch the OTP record for this email
     otp_record = db.query(OTPCode).filter(OTPCode.email == request.email).first()
@@ -210,8 +206,6 @@ def reset_password(request: StudentPasswordReset, db: Session = Depends(get_db))
 
 
 from app.utils.security import get_current_user_email  # Add this to your imports
-
-
 @router.get("/dashboard")
 def student_dashboard(current_email: str = Depends(get_current_user_email)):
     return {
@@ -221,3 +215,26 @@ def student_dashboard(current_email: str = Depends(get_current_user_email)):
     }
 
 
+from app.models.appointment import Appointment
+from app.schemas.appointment import AppointmentCreate 
+from app.utils.security import get_current_student # Import the new bouncer
+@router.post("/book-appointment")
+def book_appointment(
+    appointment_data: AppointmentCreate, 
+    db: Session = Depends(get_db),
+    current_student: Student = Depends(get_current_student) # The Bouncer!
+):
+    # 1. Create the new appointment record
+    new_appointment = Appointment(
+        student_email=current_student.email, # Securely fetched from token!
+        teacher_id=appointment_data.teacher_id,
+        purpose=appointment_data.purpose,
+        status="Pending"
+    )
+    
+    # 2. Save it to the database
+    db.add(new_appointment)
+    db.commit()
+    db.refresh(new_appointment)
+    
+    return {"message": "Appointment requested successfully!", "appointment_id": new_appointment.id}

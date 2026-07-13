@@ -95,3 +95,34 @@ def get_current_teacher(
         raise credentials_exception
 
     return teacher
+
+
+from app.models.student import Student
+
+def get_current_student(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate student credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        # Decode the JWT token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        role: str = payload.get("role")
+
+        # Verify it's actually a student token
+        if email is None or role != "student":
+            raise credentials_exception
+
+    except JWTError:
+        raise credentials_exception
+
+    # Fetch student from DB
+    student = db.query(Student).filter(Student.email == email).first()
+    if student is None:
+        raise credentials_exception
+
+    return student
