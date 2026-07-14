@@ -78,8 +78,6 @@ def update_teacher_status(
 
 
 from typing import List
-
-
 @router.get("/list", response_model=List[TeacherPublic])
 def get_all_teachers(db: Session = Depends(get_db)):
     # 1. Fetch ALL teachers from the database

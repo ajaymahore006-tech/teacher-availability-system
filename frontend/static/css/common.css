@@ -1,0 +1,105 @@
+/* ---------- RESET ---------- */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family: "Segoe UI", sans-serif;
+    background:#f4f6f9;
+    color:#333;
+}
+
+/* ---------- BUTTON ---------- */
+
+.btn{
+    width:100%;
+    padding:12px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+
+    font-size:15px;
+    font-weight:600;
+
+    transition:.25s;
+
+    background:#0056d2;
+    color:white;
+}
+
+.btn:hover{
+    background:#0041a8;
+}
+
+/* ---------- GOOGLE BUTTON ---------- */
+
+.btn-google{
+
+    background:white;
+    color:#444;
+
+    border:1px solid #ddd;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    gap:12px;
+}
+
+.btn-google:hover{
+
+    background:#f7f7f7;
+    border-color:#bbb;
+}
+
+.btn-google i{
+
+    font-size:18px;
+    color:#DB4437;
+}
+
+/* ---------- DIVIDER ---------- */
+
+.divider{
+
+    display:flex;
+    align-items:center;
+
+    margin:25px 0;
+}
+
+.divider::before,
+.divider::after{
+
+    content:"";
+    flex:1;
+
+    border-bottom:1px solid #ddd;
+}
+
+.divider span{
+
+    margin:0 12px;
+    color:#888;
+    font-size:14px;
+}
+
+/* ---------- LINKS ---------- */
+
+.auth-link,
+.back-link{
+
+    color:#0056d2;
+    text-decoration:none;
+    font-size:14px;
+}
+
+.auth-link:hover,
+.back-link:hover{
+
+    text-decoration:underline;
+}

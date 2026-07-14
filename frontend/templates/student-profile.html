@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile - DFA</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body style="margin: 0;">
+    <div class="dashboard-wrapper">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="https://via.placeholder.com/30?text=LOGO" alt="Logo" style="margin-right: 10px;">
+                DFA Portal
+            </div>
+            <nav class="sidebar-nav">
+                <a href="student-dashboard.html">🏠 Dashboard</a>
+                <a href="#">📅 My Appointments</a>
+                <a href="student-profile.html" class="active">👤 My Profile</a>
+            </nav>
+        </aside>
+
+        <main class="main-panel">
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <span style="font-weight: bold; color: #333;">Student User</span>
+                    <button onclick="logout('student')" class="btn" style="background-color: #dc3545; margin: 0;">Logout</button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="content-header">
+                    <h1 style="margin: 0; color: #333;">My Profile</h1>
+                    <p style="color: #666; margin-top: 10px;">View your account details below.</p>
+                </div>
+
+                <div class="card" style="max-width: 600px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div id="profile-info">
+                        <p><i>Loading your information...</i></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const token = checkAuth("student");
+            if (token) {
+                // This is the JS function we will write next!
+                fetchStudentProfile(); 
+            }
+        });
+    </script>
+</body>
+</html>

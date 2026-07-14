@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - DFA</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+
+</head>
+
+<body style="margin: 0;">
+    <div class="dashboard-wrapper">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <img src="https://via.placeholder.com/30?text=LOGO" alt="Logo" style="margin-right: 10px;">
+                DFA Portal
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active">🏠 Dashboard</a>
+                <a href="#">📅 My Appointments</a>
+                <a href="student-profile.html">👤 My Profile</a>
+            </nav>
+        </aside>
+
+        <main class="main-panel">
+
+            <header class="topbar">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <span style="font-weight: bold; color: #333;">Student User</span>
+                    <button onclick="logout('student')" class="btn"
+                        style="background-color: #dc3545; margin: 0;">Logout</button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="content-header">
+                    <h1 style="margin: 0; color: #333;">Welcome back!</h1>
+                    <p style="color: #666; margin-top: 10px;">Find a teacher and book your appointment below.</p>
+                </div>
+
+                <div id="teachers-list" class="card-grid">
+                    <p><i>Loading available teachers...</i></p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+
+    <script>
+        // Protect the page immediately
+        document.addEventListener("DOMContentLoaded", () => {
+            const token = checkAuth("student");
+            // Next step: Write the JS to fetch the teachers and build the cards!
+            if(token){
+            fetchTeachers();
+            }
+        });
+    </script>
+</body>
+
+</html>

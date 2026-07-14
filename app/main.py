@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, engine
 from app.routers import student as student_router
 from app.routers import teacher as teacher_router
@@ -18,9 +20,21 @@ app = FastAPI(
     description="Backend API for managing teacher availability and student requests.",
 )
 
+# --- 1. MIDDLEWARE ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(student_router.router)
 app.include_router(teacher_router.router)
 
-@app.get("/")
-def read_root():
-    return {'detail':'Welcome to Digital Faculty Assistant API'}
+
+# First, mount the /static path to serve your CSS and JS
+app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
+
+# Second, mount the root "/" path to serve your HTML templates
+app.mount("/", StaticFiles(directory="frontend/templates", html=True), name="frontend")

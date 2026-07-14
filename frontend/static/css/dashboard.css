@@ -1,0 +1,88 @@
+.dashboard-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    background: white;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-brand {
+    padding: 20px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #0056d2;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.sidebar-nav a {
+    padding: 15px 25px;
+    color: #444;
+    text-decoration: none;
+    transition: .2s;
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+    background: #eef4ff;
+    color: #0056d2;
+    border-left: 4px solid #0056d2;
+}
+
+.main-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar {
+    height: 70px;
+    background: white;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 30px;
+    border-bottom: 1px solid #ddd;
+}
+
+.content-area {
+    padding: 35px;
+    flex: 1;
+    background: #f5f7fa;
+}
+
+.content-header {
+    margin-bottom: 30px;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+    gap: 20px;
+}
+
+.teacher-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    transition: .3s;
+}
+
+.teacher-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.1);
+}
