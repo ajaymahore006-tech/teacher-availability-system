@@ -2,9 +2,9 @@
 function checkAuth(expectedRole) {
     const token = localStorage.getItem(`${expectedRole}_token`);
     
-    // If there is no token for this role, kick them back to the login page!
+    // If there is no token for this role, kick them back to the Gateway page!
     if (!token) {
-        window.location.href = `login.html?role=${expectedRole}`;
+        window.location.href = "index.html"; // <-- Changed this line!
     }
     return token;
 }

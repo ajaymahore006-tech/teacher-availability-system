@@ -1,196 +1,159 @@
-<!-- <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Faculty Assistant</title>
-    <link rel="stylesheet" href="/static/css/common.css">
-    <link rel="stylesheet" href="/static/css/home.css">
-
-</head>
-
-<body>
-
-    <header class="header">
-
-        <div class="header-left">
-
-            <img src="/static/assets/iiit_pune_logo.png" alt="IIIT Pune Logo">
-
-            <div class="header-text">
-
-                <h2>भारतीय सूचना प्रौद्योगिकी संस्थान, पुणे</h2>
-
-                <h1>Indian Institute of Information Technology Pune</h1>
-
-                <p>
-                    (An Institute of National Importance by an Act of Parliament)
-                </p>
-
-                <span>Talegaon, Pune, Maharashtra - 410507</span>
-
-            </div>
-
-        </div>
-    </header>
-    <div class="card">
-
-        <h1>Welcome to DFA</h1>
-        <p>Digital Faculty Assistant</p>
-        <p>Please select your role to continue:</p>
-
-        <a href="login.html?role=student" class="btn">I am a Student</a>
-        <a href="login.html?role=teacher" class="btn btn-teacher">I am a Teacher</a>
-    </div>
-
-</body>
-
-</html> -->
-
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Faculty Assistant</title>
-
     <link rel="stylesheet" href="/static/css/common.css">
     <link rel="stylesheet" href="/static/css/home.css">
-
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
-
 <body>
 
-    <!-- ================= HEADER ================= -->
-
     <header class="navbar">
-
         <div class="nav-left">
-
-            <img src="/static/images/logo.png"
-                 alt="IIIT Pune Logo"
-                 class="logo">
-
-            <div class="college-info">
-
-                <h2>Indian Institute of Information Technology Pune</h2>
-
-                <p>
-                    An Institute of National Importance
-                </p>
-
+            <img src="/assets/iiit_pune_logo_transparent.png" alt="IIIT Pune Logo" class="logo">
+            <div class="header-text">
+                <h2>भारतीय सूचना प्रौद्योगिकी संस्थान, पुणे</h2>
+                <h1>Indian Institute of Information Technology Pune</h1>
+                <p>(An Institute of National Importance by an Act of Parliament)</p>
+                <span>Talegaon, Pune, Maharashtra - 410507</span>
             </div>
-
         </div>
-
         <div class="nav-right">
-
             <a href="#">About</a>
-
-            <a href="#">Contact</a>
-
-            <button class="theme-btn">
-
-                <i class="fa-solid fa-moon"></i>
-
-            </button>
-
+            <a href="#">Home</a>
         </div>
-
     </header>
 
-    <!-- ================= HERO ================= -->
-
     <main class="hero">
-
         <div class="card">
-
-            <h1>Digital Faculty Assistant</h1>
-
-            <p>
-
-                Book appointments with faculty members,
-                check availability and manage meetings easily.
-
-            </p>
-
-            <a href="login.html?role=student"
-               class="btn">
-
-                <i class="fa-solid fa-user-graduate"></i>
-
-                Student Login
-
-            </a>
-
-            <a href="login.html?role=teacher"
-               class="btn btn-teacher">
-
-                <i class="fa-solid fa-chalkboard-user"></i>
-
-                Teacher Login
-
-            </a>
-
+            <h1>Welcome to DFA</h1>
+            <p>Digital Faculty Assistant</p>
+            <p>Please select your role to continue:</p>
+            
+            <button onclick="openLoginModal('student')" class="btn" style="margin-bottom: 10px;">
+                <i class="fa-solid fa-user-graduate"></i> Student Login
+            </button>
+            <button onclick="openLoginModal('teacher')" class="btn btn-teacher">
+                <i class="fa-solid fa-chalkboard-user"></i> Teacher Login
+            </button>
         </div>
-
     </main>
 
-    <!-- ================= FEATURES ================= -->
-
     <section class="features">
-
         <div class="feature">
-
             <i class="fa-solid fa-calendar-days"></i>
-
             <h3>Easy Booking</h3>
-
-            <p>
-                Book appointments in just a few clicks.
-            </p>
-
+            <p>Book appointments in just a few clicks.</p>
         </div>
-
         <div class="feature">
-
             <i class="fa-solid fa-clock"></i>
-
             <h3>Availability</h3>
-
-            <p>
-                Check teacher schedules in real time.
-            </p>
-
+            <p>Check teacher schedules in real time.</p>
         </div>
-
         <div class="feature">
-
             <i class="fa-solid fa-shield-halved"></i>
-
             <h3>Secure Access</h3>
-
-            <p>
-                Separate login for students and faculty.
-            </p>
-
+            <p>Separate login for students and faculty.</p>
         </div>
-
     </section>
 
-    <!-- ================= FOOTER ================= -->
-
     <footer>
-
-        © 2026 IIIT Pune • Digital Faculty Assistant
-
+        <p>&copy; 2026 Indian Institute of Information Technology Pune. All Rights Reserved.</p>
     </footer>
 
-</body>
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeLoginModal()">&times;</button>
+            
+            <h2 id="modal-title" style="text-align: center; margin-bottom: 20px;">Login</h2>
+            <div id="modal-error-message" style="display: none; background: #ffe6e6; color: #d9534f; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px;"></div>
 
+            <form id="modal-login-form" autocomplete="off">
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label for="email" style="display: block; font-weight: bold; margin-bottom: 5px;">Email Address</label>
+                    <input type="email" id="email" required placeholder="Enter your email" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+                
+                <div class="form-group" style="text-align: left; margin-bottom: 10px;">
+                    <label for="password" style="display: block; font-weight: bold; margin-bottom: 5px;">Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+
+                <div style="text-align: right; margin-bottom: 20px;">
+                    <a href="#" onclick="alert('Forgot Password flow coming soon!')" style="color: #0056d2; text-decoration: none; font-size: 14px;">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%;">Log In</button>
+
+                <div class="divider" style="display: flex; align-items: center; margin: 20px 0; color: #666; font-size: 14px;">
+                    <hr style="flex: 1; border: none; border-top: 1px solid #ddd;">
+                    <span style="padding: 0 10px;">OR</span>
+                    <hr style="flex: 1; border: none; border-top: 1px solid #ddd;">
+                </div>
+
+                <button type="button" class="btn btn-google" style="width: 100%; background: white; color: #333; border: 1px solid #ccc; font-weight: bold; padding: 10px; display: flex; justify-content: center; align-items: center; gap: 8px;" onclick="alert('Google Auth coming soon!')">
+                    <i class="fa-brands fa-google"></i> Sign in with Google
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <p style="font-size: 14px; color: #666;">
+                    Don't have an account? <a href="#" onclick="openSignupModal()" style="color: #0056d2; font-weight: bold; text-decoration: none;">Sign up here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="signup-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeSignupModal()">&times;</button>
+            
+            <h2 id="signup-title" style="text-align: center; color: #0056d2; margin-bottom: 5px;">Create Account</h2>
+            <p id="signup-subtitle" style="text-align: center; color: #666; margin-bottom: 25px;">Register</p>
+
+            <div id="signup-message" style="display: none; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; text-align: center;"></div>
+
+            <form id="details-form" autocomplete="off">
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Full Name</label>
+                    <input type="text" id="signup-name" required placeholder="Enter your full name" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Email Address</label>
+                    <input type="email" id="signup-email" required placeholder="you@college.edu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;" id="dynamic-field-container"></div>
+
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Create Password</label>
+                    <input type="password" id="signup-password" required placeholder="Min. 8 characters" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+
+                <button type="submit" class="btn" id="send-otp-btn">Send OTP Verification</button>
+            </form>
+
+            <form id="otp-form" style="display: none;">
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; text-align: center;">Enter OTP</label>
+                    <input type="text" id="signup-otp" required placeholder="123456" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; text-align: center; letter-spacing: 4px; font-size: 18px; font-weight: bold;">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px; text-align: center;">Check your email inbox.</p>
+                </div>
+                <button type="submit" class="btn" style="background-color: #28a745;">Verify & Create Account</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <p style="font-size: 14px; color: #666;">
+                    Already have an account? <a href="#" onclick="switchModalToLogin()" style="color: #0056d2; font-weight: bold; text-decoration: none;">Log in here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+</body>
 </html>

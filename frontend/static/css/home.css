@@ -1,220 +1,132 @@
-/* body {
+/* ---------------- NAVBAR ---------------- */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    /* Changed height to auto so it expands for the college text */
+    height: auto; 
+    padding: 15px 50px; 
+    
+    background: #1f3f75;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo {
+    width: 90px; /* Made slightly larger for the college logo */
+}
+
+/* Updated to match .header-text from our HTML */
+.header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.header-text h2 {
+    font-size: 16px; /* Hindi text */
+    font-weight: 500;
+}
+
+.header-text h1 {
+    font-size: 22px; /* Main English text */
+    font-weight: bold;
+}
+
+.header-text p, .header-text span {
+    color: #ddd;
+    font-size: 13px;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.nav-right a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.nav-right a:hover {
+    color: #a3c2ff;
+}
+
+/* ---------------- HERO ---------------- */
+.hero {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    padding: 60px 20px;
+    margin-top: 100px; /* Added margin so the navbar doesn't cover the card */
 }
 
 .card {
-    width: 420px;
+    width: 520px;
     background: white;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,.12);
+    border-radius: 14px;
+    padding: 45px;
     text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .1);
 }
 
 .card h1 {
     color: #0056d2;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .card p {
-    margin: 15px 0;
-    color: #555;
+    color: #666;
+    margin-bottom: 30px;
+    line-height: 1.6;
 }
 
+/* Fixed the button spacing so they don't overflow */
 .card .btn {
-    display: block;
-    width: 100%;
-    margin-top: 15px;
-} */
-
-
-/* ---------------- NAVBAR ---------------- */
-
-.navbar{
-
-    height:90px;
-
-    background:#1f3f75;
-
-    color:white;
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    padding:0 50px;
-
-    box-shadow:0 2px 8px rgba(0,0,0,.2);
-
-}
-
-.nav-left{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:20px;
-
-}
-
-.logo{
-
-    width:70px;
-
-}
-
-.college-info h2{
-
-    font-size:26px;
-
-}
-
-.college-info p{
-
-    color:#ddd;
-
-    font-size:15px;
-
-}
-
-.nav-right{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:25px;
-
-}
-
-.nav-right a{
-
-    color:white;
-
-    text-decoration:none;
-
-    font-weight:500;
-
-}
-
-.theme-btn{
-
-    border:none;
-
-    background:none;
-
-    color:white;
-
-    font-size:22px;
-
-    cursor:pointer;
-
-}
-
-/* ---------------- HERO ---------------- */
-
-.hero{
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    padding:60px 20px;
-
-}
-
-.card{
-
-    width:520px;
-
-    background:white;
-
-    border-radius:14px;
-
-    padding:45px;
-
-    text-align:center;
-
-    box-shadow:0 8px 20px rgba(0,0,0,.1);
-
-}
-
-.card h1{
-
-    color:#0056d2;
-
-    margin-bottom:20px;
-
-}
-
-.card p{
-
-    color:#666;
-
-    margin-bottom:30px;
-
-    line-height:1.6;
-
+    margin-bottom: 15px; 
 }
 
 /* ---------------- FEATURES ---------------- */
-
-.features{
-
-    display:grid;
-
-    grid-template-columns:repeat(3,1fr);
-
-    gap:30px;
-
-    padding:40px 80px;
-
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    padding: 40px 80px;
 }
 
-.feature{
-
-    background:white;
-
-    text-align:center;
-
-    padding:30px;
-
-    border-radius:12px;
-
-    box-shadow:0 4px 10px rgba(0,0,0,.08);
-
+.feature {
+    background: white;
+    text-align: center;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .08);
 }
 
-.feature i{
-
-    font-size:35px;
-
-    color:#0056d2;
-
-    margin-bottom:15px;
-
+.feature i {
+    font-size: 35px;
+    color: #0056d2;
+    margin-bottom: 15px;
 }
 
 /* ---------------- FOOTER ---------------- */
-
-footer{
-
-    background:#1f3f75;
-
-    color:white;
-
-    text-align:center;
-
-    padding:18px;
-
-    margin-top:40px;
-
+footer {
+    background: #1f3f75;
+    color: white;
+    text-align: center;
+    padding: 18px;
+    margin-top: 40px;
 }

@@ -32,7 +32,7 @@ app.add_middleware(
 app.include_router(student_router.router)
 app.include_router(teacher_router.router)
 
-
+app.mount("/assets", StaticFiles(directory="frontend/assets"), name="assets")
 # First, mount the /static path to serve your CSS and JS
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
