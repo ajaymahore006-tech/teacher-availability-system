@@ -56,8 +56,7 @@ def send_registration_otp(request: OTPRequest, db: Session = Depends(get_db)):
     return {"message": "OTP sent successfully. Please check your college email."}
 
 
-# (The /signup and /login routes will go below this)
-@router.post("/signup", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/signup", status_code=status.HTTP_201_CREATED)
 def register_student(request: StudentSignupWithOTP, db: Session = Depends(get_db)):
     # 1. Fetch the OTP record for this email
     otp_record = db.query(OTPCode).filter(OTPCode.email == request.email).first()
@@ -106,7 +105,15 @@ def register_student(request: StudentSignupWithOTP, db: Session = Depends(get_db
     db.commit()
     db.refresh(new_student)
 
-    return new_student
+    # ==========================================
+    # 7. AUTO-LOGIN MAGIC (Generate & Return Token)
+    # ==========================================
+    # Note: "sub" is usually the email or username
+    access_token = create_access_token(
+        data={"sub": new_student.email, "role": "student"} 
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/login")

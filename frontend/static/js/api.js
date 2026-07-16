@@ -9,10 +9,50 @@ function openLoginModal(role) {
     window.selectedRole = role;
     document.getElementById('login-modal').style.display = 'flex';
     document.getElementById('modal-title').textContent = role.charAt(0).toUpperCase() + role.slice(1) + " Login";
+    
+    // ==========================================
+    // FIX FOR BUG 2: Defeat Aggressive Autofill
+    // ==========================================
+    const loginForm = document.getElementById("modal-login-form");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    // 1. Standard form reset
+    if (loginForm) loginForm.reset(); 
+    
+    // 2. Explicitly wipe the values
+    if (emailInput) emailInput.value = "";
+    if (passwordInput) passwordInput.value = "";
+
+    // 3. The "Double-Tap": Wait 50 milliseconds and wipe them AGAIN 
+    // This catches the browser if it tries to auto-fill right after the modal becomes visible
+    setTimeout(() => {
+        if (emailInput) emailInput.value = "";
+        if (passwordInput) passwordInput.value = "";
+    }, 50);
+
+    // Hide any leftover error messages from previous attempts
+    const errorMsg = document.getElementById("modal-error-message");
+    if (errorMsg) errorMsg.style.display = "none";
 }
 
 function closeLoginModal() {
     document.getElementById('login-modal').style.display = 'none';
+}
+
+function togglePasswordVisibility() {
+    const passwordInput = document.getElementById("password");
+    const toggleIcon = document.getElementById("toggle-password");
+    
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleIcon.classList.remove("fa-eye");
+        toggleIcon.classList.add("fa-eye-slash"); // Changes to a slashed eye
+    } else {
+        passwordInput.type = "password";
+        toggleIcon.classList.remove("fa-eye-slash");
+        toggleIcon.classList.add("fa-eye"); // Changes back to normal eye
+    }
 }
 
 function openSignupModal() {
@@ -59,6 +99,24 @@ function switchModalToLogin() {
     openLoginModal(window.selectedRole);
 }
 
+function openForgotModal() {
+    closeLoginModal();
+    document.getElementById('forgot-modal').style.display = 'flex';
+    document.getElementById('forgot-subtitle').textContent = `Reset ${window.selectedRole.charAt(0).toUpperCase() + window.selectedRole.slice(1)} Password`;
+}
+
+function closeForgotModal() {
+    document.getElementById('forgot-modal').style.display = 'none';
+    // Reset the forms so it's fresh next time it opens
+    document.getElementById("forgot-step1").style.display = "block";
+    document.getElementById("forgot-step2").style.display = "none";
+    document.getElementById("forgot-message").style.display = "none";
+}
+
+function switchForgotToLogin() {
+    closeForgotModal();
+    openLoginModal(window.selectedRole);
+}
 
 // ==========================================
 // FORM SUBMISSIONS & API CALLS
@@ -72,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const messageBox = document.getElementById("signup-message");
 
     // --- LOGIN FORM SUBMIT LISTENER ---
+    // --- LOGIN FORM SUBMIT LISTENER ---
     if (modalLoginForm) {
         modalLoginForm.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -79,20 +138,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
 
-            const loginData = {
-                email: email,
-                password: password
-            };
-
             try {
+                // YAHAN CHANGE KIYA HAI: Ab hum JSON format bhej rahe hain!
                 const response = await fetch(`${API_BASE_URL}/api/${role}/login`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(loginData)
-                }
-                );
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
 
                 const data = await response.json();
 
@@ -108,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 errorMessage.style.display = "block";
             }
         });
+
     }
 
     // --- SIGNUP STEP 1: SEND OTP ---
@@ -150,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- SIGNUP STEP 2: VERIFY & REGISTER ---
+    // --- SIGNUP STEP 2: VERIFY & REGISTER (AUTO-LOGIN UPDATED) ---
     if (otpForm) {
         otpForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -163,8 +219,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 otp: document.getElementById("signup-otp").value
             };
 
+            // Fix: Changed 'student_id' to 'roll_no' to match FastAPI's Pydantic schema
             if (role === "student") {
-                payload.student_id = document.getElementById("dynamic-input").value;
+                payload.roll_no = document.getElementById("dynamic-input").value;
             } else {
                 payload.department = document.getElementById("dynamic-input").value;
             }
@@ -176,25 +233,114 @@ document.addEventListener("DOMContentLoaded", () => {
                     body: JSON.stringify(payload)
                 });
 
+                // Ab JSON har haal mein parse karna padega token nikalne ke liye
+                const data = await response.json();
+
                 if (response.ok) {
+                    // 1. JWT Token ko browser storage mein save karo
+                    localStorage.setItem(`${role}_token`, data.access_token);
+
+                    // 2. Success message dikhao
                     messageBox.style.background = "#e6f4ea";
                     messageBox.style.color = "#28a745";
-                    messageBox.innerHTML = "<strong>Success!</strong> Account created. Closing window...";
+                    messageBox.innerHTML = "<strong>Success!</strong> Account created. Logging you in...";
                     otpForm.style.display = "none";
 
-                    // Account banne ke baad 2 second mein automatically login modal par switch kar dega
+                    // 3. 1.5 seconds baad sidha dashboard par redirect!
                     setTimeout(() => {
-                        closeSignupModal();
-                        openLoginModal(role);
-                    }, 2000);
+                        window.location.href = `${role}_dashboard.html`;
+                    }, 1500);
                 } else {
-                    const data = await response.json();
                     throw new Error(data.detail || "Invalid OTP or Signup Failed");
                 }
             } catch (error) {
                 messageBox.style.background = "#ffe6e6";
                 messageBox.style.color = "#d9534f";
                 messageBox.textContent = error.message;
+            }
+        });
+    }
+
+    // --- FORGOT PASSWORD STEP 1: SEND OTP ---
+    const forgotStep1 = document.getElementById("forgot-step1");
+    const forgotStep2 = document.getElementById("forgot-step2");
+    const forgotMessage = document.getElementById("forgot-message");
+
+    if (forgotStep1) {
+        forgotStep1.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const role = window.selectedRole;
+            const email = document.getElementById("forgot-email").value;
+            const btn = document.getElementById("forgot-send-btn");
+
+            btn.textContent = "Sending...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/${role}/forgot-password`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email })
+                });
+
+                if (response.ok) {
+                    forgotStep1.style.display = "none";
+                    forgotStep2.style.display = "block";
+                    forgotMessage.style.display = "block";
+                    forgotMessage.style.background = "#e6f4ea";
+                    forgotMessage.style.color = "#28a745";
+                    forgotMessage.textContent = "OTP Sent! Please check your email.";
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.detail || "Failed to send reset link.");
+                }
+            } catch (error) {
+                forgotMessage.style.display = "block";
+                forgotMessage.style.background = "#ffe6e6";
+                forgotMessage.style.color = "#d9534f";
+                forgotMessage.textContent = error.message;
+                btn.textContent = "Send Recovery OTP";
+                btn.disabled = false;
+            }
+        });
+    }
+
+    // --- FORGOT PASSWORD STEP 2: RESET PASSWORD ---
+    if (forgotStep2) {
+        forgotStep2.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const role = window.selectedRole;
+
+            const payload = {
+                email: document.getElementById("forgot-email").value,
+                otp: document.getElementById("forgot-otp").value,
+                new_password: document.getElementById("forgot-new-password").value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/${role}/reset-password`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    forgotMessage.style.background = "#e6f4ea";
+                    forgotMessage.style.color = "#28a745";
+                    forgotMessage.innerHTML = "<strong>Success!</strong> Password reset. Switching to login...";
+                    forgotStep2.style.display = "none";
+
+                    setTimeout(() => {
+                        switchForgotToLogin();
+                    }, 2000);
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.detail || "Invalid OTP or Reset Failed");
+                }
+            } catch (error) {
+                forgotMessage.style.background = "#ffe6e6";
+                forgotMessage.style.color = "#d9534f";
+                forgotMessage.textContent = error.message;
             }
         });
     }

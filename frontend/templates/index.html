@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="/static/css/home.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
+
 <body>
 
     <header class="navbar">
@@ -31,7 +33,7 @@
             <h1>Welcome to DFA</h1>
             <p>Digital Faculty Assistant</p>
             <p>Please select your role to continue:</p>
-            
+
             <button onclick="openLoginModal('student')" class="btn" style="margin-bottom: 10px;">
                 <i class="fa-solid fa-user-graduate"></i> Student Login
             </button>
@@ -66,41 +68,56 @@
     <div id="login-modal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-btn" onclick="closeLoginModal()">&times;</button>
-            
+
             <h2 id="modal-title" style="text-align: center; margin-bottom: 20px;">Login</h2>
-            <div id="modal-error-message" style="display: none; background: #ffe6e6; color: #d9534f; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px;"></div>
+            <div id="modal-error-message"
+                style="display: none; background: #ffe6e6; color: #d9534f; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px;">
+            </div>
 
             <form id="modal-login-form" autocomplete="off">
                 <div class="form-group" style="text-align: left; margin-bottom: 15px;">
-                    <label for="email" style="display: block; font-weight: bold; margin-bottom: 5px;">Email Address</label>
-                    <input type="email" id="email" required placeholder="Enter your email" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    <label for="email" style="display: block; font-weight: bold; margin-bottom: 5px;">Email
+                        Address</label>
+                    <input type="email" id="email" required placeholder="Enter your email"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
                 </div>
-                
-                <div class="form-group" style="text-align: left; margin-bottom: 10px;">
-                    <label for="password" style="display: block; font-weight: bold; margin-bottom: 5px;">Password</label>
-                    <input type="password" id="password" required placeholder="Enter your password" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+
+                <div class="form-group" style="text-align: left; margin-bottom: 20px; position: relative;">
+                    <label for="password"
+                        style="display: block; font-weight: bold; margin-bottom: 5px;">Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; padding-right: 40px;">
+
+                    <i class="fa-solid fa-eye" id="toggle-password"
+                        style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #666;"
+                        onclick="togglePasswordVisibility()"></i>
                 </div>
 
                 <div style="text-align: right; margin-bottom: 20px;">
-                    <a href="#" onclick="alert('Forgot Password flow coming soon!')" style="color: #0056d2; text-decoration: none; font-size: 14px;">Forgot Password?</a>
+                    <a href="#" onclick="openForgotModal()"
+                        style="color: #0056d2; text-decoration: none; font-size: 14px;">Forgot Password?</a>
                 </div>
 
                 <button type="submit" class="btn" style="width: 100%;">Log In</button>
 
-                <div class="divider" style="display: flex; align-items: center; margin: 20px 0; color: #666; font-size: 14px;">
+                <div class="divider"
+                    style="display: flex; align-items: center; margin: 20px 0; color: #666; font-size: 14px;">
                     <hr style="flex: 1; border: none; border-top: 1px solid #ddd;">
                     <span style="padding: 0 10px;">OR</span>
                     <hr style="flex: 1; border: none; border-top: 1px solid #ddd;">
                 </div>
 
-                <button type="button" class="btn btn-google" style="width: 100%; background: white; color: #333; border: 1px solid #ccc; font-weight: bold; padding: 10px; display: flex; justify-content: center; align-items: center; gap: 8px;" onclick="alert('Google Auth coming soon!')">
+                <button type="button" class="btn btn-google"
+                    style="width: 100%; background: white; color: #333; border: 1px solid #ccc; font-weight: bold; padding: 10px; display: flex; justify-content: center; align-items: center; gap: 8px;"
+                    onclick="alert('Google Auth coming soon!')">
                     <i class="fa-brands fa-google"></i> Sign in with Google
                 </button>
             </form>
 
             <div style="text-align: center; margin-top: 25px;">
                 <p style="font-size: 14px; color: #666;">
-                    Don't have an account? <a href="#" onclick="openSignupModal()" style="color: #0056d2; font-weight: bold; text-decoration: none;">Sign up here</a>
+                    Don't have an account? <a href="#" onclick="openSignupModal()"
+                        style="color: #0056d2; font-weight: bold; text-decoration: none;">Sign up here</a>
                 </p>
             </div>
         </div>
@@ -110,28 +127,34 @@
     <div id="signup-modal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-btn" onclick="closeSignupModal()">&times;</button>
-            
+
             <h2 id="signup-title" style="text-align: center; color: #0056d2; margin-bottom: 5px;">Create Account</h2>
             <p id="signup-subtitle" style="text-align: center; color: #666; margin-bottom: 25px;">Register</p>
 
-            <div id="signup-message" style="display: none; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; text-align: center;"></div>
+            <div id="signup-message"
+                style="display: none; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; text-align: center;">
+            </div>
 
             <form id="details-form" autocomplete="off">
                 <div class="form-group" style="text-align: left; margin-bottom: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px;">Full Name</label>
-                    <input type="text" id="signup-name" required placeholder="Enter your full name" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="text" id="signup-name" required placeholder="Enter your full name"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
                 </div>
 
                 <div class="form-group" style="text-align: left; margin-bottom: 15px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px;">Email Address</label>
-                    <input type="email" id="signup-email" required placeholder="you@college.edu" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="email" id="signup-email" required placeholder="you@college.edu"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
                 </div>
 
-                <div class="form-group" style="text-align: left; margin-bottom: 15px;" id="dynamic-field-container"></div>
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;" id="dynamic-field-container">
+                </div>
 
                 <div class="form-group" style="text-align: left; margin-bottom: 20px;">
                     <label style="display: block; font-weight: bold; margin-bottom: 5px;">Create Password</label>
-                    <input type="password" id="signup-password" required placeholder="Min. 8 characters" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                    <input type="password" id="signup-password" required placeholder="Min. 8 characters"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
                 </div>
 
                 <button type="submit" class="btn" id="send-otp-btn">Send OTP Verification</button>
@@ -139,16 +162,67 @@
 
             <form id="otp-form" style="display: none;">
                 <div class="form-group" style="text-align: left; margin-bottom: 20px;">
-                    <label style="display: block; font-weight: bold; margin-bottom: 5px; text-align: center;">Enter OTP</label>
-                    <input type="text" id="signup-otp" required placeholder="123456" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; text-align: center; letter-spacing: 4px; font-size: 18px; font-weight: bold;">
-                    <p style="font-size: 12px; color: #666; margin-top: 5px; text-align: center;">Check your email inbox.</p>
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; text-align: center;">Enter
+                        OTP</label>
+                    <input type="text" id="signup-otp" required placeholder="123456"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; text-align: center; letter-spacing: 4px; font-size: 18px; font-weight: bold;">
+                    <p style="font-size: 12px; color: #666; margin-top: 5px; text-align: center;">Check your email
+                        inbox.</p>
                 </div>
                 <button type="submit" class="btn" style="background-color: #28a745;">Verify & Create Account</button>
             </form>
 
             <div style="text-align: center; margin-top: 25px;">
                 <p style="font-size: 14px; color: #666;">
-                    Already have an account? <a href="#" onclick="switchModalToLogin()" style="color: #0056d2; font-weight: bold; text-decoration: none;">Log in here</a>
+                    Already have an account? <a href="#" onclick="switchModalToLogin()"
+                        style="color: #0056d2; font-weight: bold; text-decoration: none;">Log in here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="forgot-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeForgotModal()">&times;</button>
+
+            <h2 style="text-align: center; color: #0056d2; margin-bottom: 5px;">Reset Password</h2>
+            <p id="forgot-subtitle" style="text-align: center; color: #666; margin-bottom: 25px;">Account Recovery</p>
+
+            <div id="forgot-message"
+                style="display: none; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; text-align: center;">
+            </div>
+
+            <form id="forgot-step1">
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Registered Email
+                        Address</label>
+                    <input type="email" id="forgot-email" required placeholder="you@college.edu"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+                <button type="submit" class="btn" id="forgot-send-btn">Send Recovery OTP</button>
+            </form>
+
+            <form id="forgot-step2" style="display: none;">
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; text-align: center;">Enter
+                        6-Digit OTP</label>
+                    <input type="text" id="forgot-otp" required placeholder="123456"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; text-align: center; letter-spacing: 4px; font-size: 18px; font-weight: bold;">
+                </div>
+
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Password</label>
+                    <input type="password" id="forgot-new-password" required placeholder="Min. 8 characters"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+
+                <button type="submit" class="btn" style="background-color: #28a745;">Reset Password</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <p style="font-size: 14px; color: #666;">
+                    Remembered your password? <a href="#" onclick="switchForgotToLogin()"
+                        style="color: #0056d2; font-weight: bold; text-decoration: none;">Log in here</a>
                 </p>
             </div>
         </div>
@@ -156,4 +230,5 @@
 
     <script src="/static/js/api.js"></script>
 </body>
+
 </html>

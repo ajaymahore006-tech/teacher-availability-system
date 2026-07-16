@@ -61,8 +61,6 @@ def setup_teacher(db: Session = Depends(get_db)):
 
 
 from app.schemas.teacher import TeacherStatusUpdate, TeacherPublic
-
-
 @router.put("/update-status")
 def update_teacher_status(
     status_data: TeacherStatusUpdate,
