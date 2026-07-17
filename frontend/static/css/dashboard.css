@@ -1,88 +1,272 @@
-.dashboard-wrapper {
-    display: flex;
+/* ================== DASHBOARD BASE ================== */
+.dashboard-body {
+    background-color: #f4f7f6;
+    margin: 0;
+    padding-top: 70px; /* Space for fixed navbar */
+}
+
+/* ================== NAVBAR ================== */
+.dash-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 100vh;
-}
-
-.sidebar {
-    width: 260px;
-    background: white;
-    border-right: 1px solid #ddd;
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-brand {
-    padding: 20px;
-    font-size: 22px;
-    font-weight: bold;
-    color: #0056d2;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
-}
-
-.sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    margin-top: 20px;
-}
-
-.sidebar-nav a {
-    padding: 15px 25px;
-    color: #444;
-    text-decoration: none;
-    transition: .2s;
-}
-
-.sidebar-nav a:hover,
-.sidebar-nav a.active {
-    background: #eef4ff;
-    color: #0056d2;
-    border-left: 4px solid #0056d2;
-}
-
-.main-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.topbar {
     height: 70px;
     background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    padding: 0 30px;
-    border-bottom: 1px solid #ddd;
+    padding: 0 40px;
+    z-index: 1000;
 }
 
-.content-area {
-    padding: 35px;
-    flex: 1;
-    background: #f5f7fa;
+
+/* ================== CUSTOM DFA LOGO ================== */
+.dash-logo-nav .logo {
+    height: 68px; /* Fits perfectly inside the 70px navbar */
+    width: auto; /* Maintains the original shape of your logo */
+    object-fit: contain; /* Prevents the image from stretching or squishing */
+    cursor: pointer; /* Makes it feel clickable like a home button */
+    transition: transform 0.2s ease-in-out; /* Smooth animation setup */
+    
 }
 
-.content-header {
+/* Adds a premium "pop" effect when the user hovers over it */
+.dash-logo-nav .logo:hover {
+    transform: scale(1.05);
+}
+
+/* ================== NAVBAR UPGRADES ================== */
+
+/* 1. Group the Logo and Links together */
+.dash-logo-nav {
+    display: flex;
+    align-items: center;
+    gap: 40px; /* Creates nice breathing room between logo and links */
+}
+
+
+/* 3. Widen the Search Bar */
+.dash-search {
+    background: #f0f2f5;
+    border-radius: 20px;
+    padding: 10px 20px; /* Slightly thicker */
+    display: flex;
+    align-items: center;
+    width: 500px; /* Increased from 400px to fill the void */
+}
+
+
+
+/* Search Bar */
+.dash-search {
+    background: #f0f2f5;
+    border-radius: 20px;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    width: 400px;
+}
+
+.dash-search i {
+    color: #888;
+    margin-right: 10px;
+}
+
+.dash-search input {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    font-size: 14px;
+}
+
+/* Profile Button */
+.profile-btn {
+    background: transparent;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-btn:hover {
+    background: #f0f2f5;
+    border-color: #ccc;
+}
+
+.profile-btn i {
+    font-size: 18px;
+    color: #0056d2;
+}
+
+/* ================== MAIN CONTAINER ================== */
+.dash-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+/* ================== WELCOME BANNER ================== */
+.welcome-banner {
+    background: linear-gradient(135deg, #0056d2, #1f3f75);
+    border-radius: 16px;
+    padding: 35px 40px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 30px;
+    box-shadow: 0 8px 20px rgba(0, 86, 210, 0.15);
 }
 
-.card-grid {
+.banner-text h1 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+}
+
+.banner-text p {
+    margin: 0;
+    color: #d1e3ff;
+    font-size: 16px;
+}
+
+.upcoming-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+}
+
+/* ================== TOOLBAR ================== */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.toolbar h2 {
+    color: #333;
+    margin: 0;
+}
+
+.filter-select {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: white;
+    outline: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ================== TEACHERS GRID ================== */
+.teachers-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
 }
 
+/* Teacher Card (For JS Injection) */
 .teacher-card {
     background: white;
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    transition: .3s;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #eee;
 }
 
 .teacher-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,.1);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+/* ================== PROFILE MODAL SPECIFICS ================== */
+.profile-card {
+    max-width: 400px;
+    text-align: center;
+}
+
+.profile-avatar {
+    font-size: 70px;
+    color: #0056d2;
+    margin-bottom: 15px;
+}
+
+.profile-card h2 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.profile-card #profile-role {
+    color: #888;
+    margin: 0 0 25px 0;
+    font-size: 14px;
+}
+
+.profile-details {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: left;
+    border: 1px solid #eee;
+}
+
+.profile-details p {
+    margin: 10px 0;
+    color: #444;
+}
+
+
+/* ================== RESPONSIVE DESIGN (MOBILE) ================== */
+@media (max-width: 768px) {
+    /* 1. Make the navbar taller and let items wrap to a new line */
+    .dash-navbar {
+        padding: 15px; 
+        height: auto; 
+        flex-wrap: wrap; 
+        gap: 15px;
+    }
+
+    /* 2. Push the search bar to the second row and make it full width */
+    .dash-search {
+        order: 3; 
+        width: 100%; 
+    }
+    
+    .profile-btn i {
+        margin: 0;
+        font-size: 22px;
+    }
+
+    /* 4. Fix the Main Container spacing since the navbar is now taller */
+    .dashboard-body {
+        padding-top: 130px; 
+    }
+
+    /* 5. Teacher Cards */
+    .teachers-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .welcome-banner {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+        padding: 20px;
+    }
 }

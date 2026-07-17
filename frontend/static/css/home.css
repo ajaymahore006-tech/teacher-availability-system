@@ -23,8 +23,11 @@
     gap: 20px;
 }
 
-.logo {
+.nav-left .logo {
     width: 90px; /* Made slightly larger for the college logo */
+}
+.nav-left .logo:hover{
+    transform: scale(1.05);
 }
 
 /* Updated to match .header-text from our HTML */

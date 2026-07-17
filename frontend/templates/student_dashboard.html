@@ -7,58 +7,249 @@
     <title>Student Dashboard - DFA</title>
     <link rel="stylesheet" href="/static/css/common.css">
     <link rel="stylesheet" href="/static/css/dashboard.css">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 
-<body style="margin: 0;">
-    <div class="dashboard-wrapper">
+<body class="dashboard-body">
 
-        <aside class="sidebar">
-            <div class="sidebar-brand">
-                <img src="https://via.placeholder.com/30?text=LOGO" alt="Logo" style="margin-right: 10px;">
-                DFA Portal
+   <header class="dash-navbar">
+        <div class="dash-logo-nav">
+            <img src="/assets/dfa_logo.png" alt="DFA Logo" class="logo">
+        </div>
+        
+        <div class="dash-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-teacher" placeholder="Search for faculty or departments...">
+        </div>
+
+        <div class="dash-profile">
+            <button class="profile-btn" onclick="openProfileModal()">
+                <i class="fa-solid fa-circle-user"></i> My Profile
+            </button>
+        </div>
+    </header>
+
+    <main class="dash-container">
+
+        <section class="welcome-banner">
+            <div class="banner-text">
+                <h1>Welcome back, Student!</h1>
+                <p>Find your faculty and book your appointments instantly.</p>
             </div>
-            <nav class="sidebar-nav">
-                <a href="#" class="active">🏠 Dashboard</a>
-                <a href="#">📅 My Appointments</a>
-                <a href="student-profile.html">👤 My Profile</a>
-            </nav>
-        </aside>
+            <div class="upcoming-badge">
+                <i class="fa-regular fa-calendar-check"></i>
+                <span>0 Upcoming Meetings</span>
+            </div>
+        </section>
 
-        <main class="main-panel">
+        <div class="toolbar">
+            <h2>Available Faculty</h2>
+            <select id="department-filter" class="filter-select">
+                <option value="all">All Departments</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Electronics">Electronics</option>
+            </select>
+        </div>
 
-            <header class="topbar">
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <span style="font-weight: bold; color: #333;">Student User</span>
-                    <button onclick="logout('student')" class="btn"
-                        style="background-color: #dc3545; margin: 0;">Logout</button>
-                </div>
-            </header>
+        <div id="teachers-list" class="teachers-grid">
+            <p style="text-align: center; color: #666; grid-column: 1 / -1; padding: 40px;">
+                <i class="fa-solid fa-spinner fa-spin"
+                    style="font-size: 24px; color: #0056d2; margin-bottom: 10px;"></i><br>
+                Loading available teachers...
+            </p>
+        </div>
 
-            <div class="content-area">
-                <div class="content-header">
-                    <h1 style="margin: 0; color: #333;">Welcome back!</h1>
-                    <p style="color: #666; margin-top: 10px;">Find a teacher and book your appointment below.</p>
-                </div>
+    </main>
 
-                <div id="teachers-list" class="card-grid">
-                    <p><i>Loading available teachers...</i></p>
-                </div>
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content profile-card">
+            <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+
+            <i class="fa-solid fa-circle-user profile-avatar"></i>
+            <h2 id="profile-name">Student Account</h2>
+            <p id="profile-role">Computer Science Dept</p>
+
+            <div class="profile-details">
+                <p><strong>Email:</strong> <span id="profile-email">Loading...</span></p>
+                <p><strong>Roll No:</strong> <span id="profile-roll">Loading...</span></p>
             </div>
 
-        </main>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-google" style="flex: 1;" onclick="openChangePasswordModal()">
+                    <i class="fa-solid fa-key"></i> Password
+                </button>
+                <button class="btn" style="flex: 1; background-color: #dc3545;" onclick="logout('student')">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="change-password-modal" class="modal-overlay">
+        <div class="modal-content profile-card">
+            <button class="close-btn" onclick="closeChangePasswordModal()">&times;</button>
+
+            <h2 style="color: #0056d2; margin-bottom: 5px;">Change Password</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px;">For security, we will verify this via email
+                OTP.</p>
+
+            <div id="cp-message"
+                style="display: none; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px;"></div>
+
+            <form id="cp-step1">
+                <div
+                    style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;">
+                    <p style="margin: 0; color: #444;">Send OTP to:<br><strong id="cp-email-display">...</strong></p>
+                </div>
+                <button type="submit" class="btn" id="cp-send-btn">Send Verification Code</button>
+            </form>
+
+            <form id="cp-step2" style="display: none;">
+
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; text-align: center;">Enter
+                        6-Digit OTP</label>
+                    <input type="text" id="cp-otp" required placeholder="123456"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; text-align: center; letter-spacing: 4px; font-size: 18px; font-weight: bold;">
+                </div>
+
+                <div class="form-group" style="text-align: left; margin-bottom: 20px; position: relative;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Password</label>
+                    <input type="password" id="cp-new-password" required placeholder="Min. 8 characters"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; padding-right: 40px;">
+
+                    <i class="fa-solid fa-eye-slash" id="toggle-cp-password"
+                        style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #666;"
+                        onclick="toggleCpPasswordVisibility()"></i>
+                </div>
+
+                <button type="submit" class="btn" style="background-color: #28a745; width: 100%;">Secure Update</button>
+            </form>
+        </div>
     </div>
 
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/api.js"></script>
 
     <script>
-        // Protect the page immediately
+        // Modal Controls
+        function openProfileModal() {
+            document.getElementById('profile-modal').style.display = 'flex';
+            // We will hook this up to fetch profile details in the next step!
+            if (typeof fetchStudentProfile === "function") fetchStudentProfile();
+        }
+        function closeProfileModal() {
+            document.getElementById('profile-modal').style.display = 'none';
+        }
+
+        // ==========================================
+        // CHANGE PASSWORD (OTP) LOGIC
+        // ==========================================
+        function openChangePasswordModal() {
+            // Grab the email directly from the profile modal
+            const email = document.getElementById("profile-email").textContent;
+
+            if (!email || email === "Loading...") {
+                alert("Please wait for your profile to load completely.");
+                return;
+            }
+
+            document.getElementById("cp-email-display").textContent = email;
+            closeProfileModal();
+            document.getElementById('change-password-modal').style.display = 'flex';
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('change-password-modal').style.display = 'none';
+            // Reset the forms for next time
+            document.getElementById("cp-step1").style.display = "block";
+            document.getElementById("cp-step2").style.display = "none";
+            document.getElementById("cp-message").style.display = "none";
+        }
+
+        // Handle Step 1: Sending the OTP
+        document.getElementById("cp-step1").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const email = document.getElementById("cp-email-display").textContent;
+            const btn = document.getElementById("cp-send-btn");
+            const messageBox = document.getElementById("cp-message");
+
+            btn.textContent = "Sending...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/student/forgot-password`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email })
+                });
+
+                if (response.ok) {
+                    document.getElementById("cp-step1").style.display = "none";
+                    document.getElementById("cp-step2").style.display = "block";
+                    messageBox.style.display = "block";
+                    messageBox.style.background = "#e6f4ea";
+                    messageBox.style.color = "#28a745";
+                    messageBox.textContent = "Security OTP Sent! Check your email.";
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.detail || "Failed to send OTP.");
+                }
+            } catch (error) {
+                messageBox.style.display = "block";
+                messageBox.style.background = "#ffe6e6";
+                messageBox.style.color = "#d9534f";
+                messageBox.textContent = error.message;
+                btn.textContent = "Send Verification Code";
+                btn.disabled = false;
+            }
+        });
+
+        // Handle Step 2: Verifying OTP and Setting New Password
+        document.getElementById("cp-step2").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const messageBox = document.getElementById("cp-message");
+
+            const payload = {
+                email: document.getElementById("cp-email-display").textContent,
+                otp: document.getElementById("cp-otp").value,
+                new_password: document.getElementById("cp-new-password").value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/student/reset-password`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    messageBox.style.background = "#e6f4ea";
+                    messageBox.style.color = "#28a745";
+                    messageBox.innerHTML = "<strong>Success!</strong> Password updated. Logging you out for security...";
+                    document.getElementById("cp-step2").style.display = "none";
+
+                    // Industry Standard: Force logout after password change so they log in with the new one
+                    setTimeout(() => {
+                        logout('student');
+                    }, 2500);
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.detail || "Invalid OTP.");
+                }
+            } catch (error) {
+                messageBox.style.background = "#ffe6e6";
+                messageBox.style.color = "#d9534f";
+                messageBox.textContent = error.message;
+            }
+        });
+
+        // Page Protection & Load Logic
         document.addEventListener("DOMContentLoaded", () => {
             const token = checkAuth("student");
-            // Next step: Write the JS to fetch the teachers and build the cards!
-            if(token){
-            fetchTeachers();
+            if (token && typeof fetchTeachers === "function") {
+                fetchTeachers();
             }
         });
     </script>

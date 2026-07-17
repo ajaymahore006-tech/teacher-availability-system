@@ -9,7 +9,7 @@ function openLoginModal(role) {
     window.selectedRole = role;
     document.getElementById('login-modal').style.display = 'flex';
     document.getElementById('modal-title').textContent = role.charAt(0).toUpperCase() + role.slice(1) + " Login";
-    
+
     // ==========================================
     // FIX FOR BUG 2: Defeat Aggressive Autofill
     // ==========================================
@@ -18,8 +18,8 @@ function openLoginModal(role) {
     const passwordInput = document.getElementById("password");
 
     // 1. Standard form reset
-    if (loginForm) loginForm.reset(); 
-    
+    if (loginForm) loginForm.reset();
+
     // 2. Explicitly wipe the values
     if (emailInput) emailInput.value = "";
     if (passwordInput) passwordInput.value = "";
@@ -43,15 +43,18 @@ function closeLoginModal() {
 function togglePasswordVisibility() {
     const passwordInput = document.getElementById("password");
     const toggleIcon = document.getElementById("toggle-password");
-    
+
+    // If it is hidden, show it and OPEN the eye
     if (passwordInput.type === "password") {
         passwordInput.type = "text";
-        toggleIcon.classList.remove("fa-eye");
-        toggleIcon.classList.add("fa-eye-slash"); // Changes to a slashed eye
-    } else {
-        passwordInput.type = "password";
         toggleIcon.classList.remove("fa-eye-slash");
-        toggleIcon.classList.add("fa-eye"); // Changes back to normal eye
+        toggleIcon.classList.add("fa-eye");
+    }
+    // If it is visible, hide it and SLASH the eye
+    else {
+        passwordInput.type = "password";
+        toggleIcon.classList.remove("fa-eye");
+        toggleIcon.classList.add("fa-eye-slash");
     }
 }
 
@@ -111,6 +114,50 @@ function closeForgotModal() {
     document.getElementById("forgot-step1").style.display = "block";
     document.getElementById("forgot-step2").style.display = "none";
     document.getElementById("forgot-message").style.display = "none";
+
+}
+
+// ==========================================
+// DASHBOARD: CHANGE PASSWORD (LOGGED IN)
+// ==========================================
+function openChangePasswordModal() {
+    const email = document.getElementById("profile-email").textContent;
+    if (!email || email === "Loading...") {
+        alert("Please wait for your profile to load completely.");
+        return;
+    }
+    document.getElementById("cp-email-display").textContent = email;
+
+    // Close the profile modal and open the change password modal
+    if (typeof closeProfileModal === 'function') closeProfileModal();
+    document.getElementById('change-password-modal').style.display = 'flex';
+}
+
+function closeChangePasswordModal() {
+    document.getElementById('change-password-modal').style.display = 'none';
+
+    // Reset the forms so it's fresh next time
+    document.getElementById("cp-step1").style.display = "block";
+    document.getElementById("cp-step2").style.display = "none";
+    document.getElementById("cp-message").style.display = "none";
+}
+
+function toggleCpPasswordVisibility() {
+    const passwordInput = document.getElementById("cp-new-password");
+    const toggleIcon = document.getElementById("toggle-cp-password");
+
+    // If it is hidden, show it and OPEN the eye
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleIcon.classList.remove("fa-eye-slash");
+        toggleIcon.classList.add("fa-eye");
+    }
+    // If it is visible, hide it and SLASH the eye
+    else {
+        passwordInput.type = "password";
+        toggleIcon.classList.remove("fa-eye");
+        toggleIcon.classList.add("fa-eye-slash");
+    }
 }
 
 function switchForgotToLogin() {
@@ -413,16 +460,17 @@ function bookAppointment(teacherId) {
 }
 
 // ==========================================
-// STUDENT PROFILE: Fetch & Display Details
+// STUDENT PROFILE: Fetch & Display Details (UPDATED FOR MODAL)
 // ==========================================
 async function fetchStudentProfile() {
     const token = localStorage.getItem("student_token");
-    const profileInfoDiv = document.getElementById("profile-info");
 
-    if (!profileInfoDiv) return;
+    // If there is no token, don't even try to fetch
+    if (!token) return;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/student/me`, {
+        // Calling the /profile route we just built in the backend
+        const response = await fetch(`${API_BASE_URL}/api/student/profile`, {
             method: "GET",
             headers: {
                 "Authorization": `Bearer ${token}`,
@@ -433,27 +481,22 @@ async function fetchStudentProfile() {
         if (response.ok) {
             const student = await response.json();
 
-            const studentName = student.name || student.full_name || student.username || "Unknown";
-            const studentEmail = student.email || "No email provided";
-            const studentId = student.id || "N/A";
+            // Inject the data into the new specific HTML elements in the modal
+            document.getElementById("profile-name").textContent = student.name || "Unknown Student";
+            document.getElementById("profile-email").textContent = student.email || "No Email";
 
-            profileInfoDiv.innerHTML = `
-                <div style="font-size: 16px; line-height: 1.8; color: #444;">
-                    <p><strong>Full Name:</strong> ${studentName}</p>
-                    <p><strong>Email Address:</strong> ${studentEmail}</p>
-                    <p><strong>Student ID Number:</strong> ${studentId}</p>
-                    <p><strong>Account Role:</strong> <span style="background: #e9ecef; padding: 3px 8px; border-radius: 4px; font-size: 14px;">Student</span></p>
-                </div>
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                <button class="btn" style="background-color: #6c757d; width: 100%;" onclick="alert('Password change feature coming soon!')">
-                    Change Password
-                </button>
-            `;
+            // Using roll_no to match your student.py model
+            document.getElementById("profile-roll").textContent = student.roll_no || "N/A";
+
         } else {
-            profileInfoDiv.innerHTML = "<p style='color:red;'>Failed to load profile data.</p>";
+            console.error("Failed to load profile data");
+            document.getElementById("profile-email").textContent = "Error loading data";
+            document.getElementById("profile-roll").textContent = "Error loading data";
         }
     } catch (error) {
-        console.error("Error fetching profile:", error);
-        profileInfoDiv.innerHTML = "<p style='color:red;'>Server connection error.</p>";
+        console.error("Server connection error:", error);
+        document.getElementById("profile-email").textContent = "Connection error";
+        document.getElementById("profile-roll").textContent = "Connection error";
     }
 }
+

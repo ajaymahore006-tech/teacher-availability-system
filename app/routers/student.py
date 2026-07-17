@@ -245,3 +245,37 @@ def book_appointment(
     db.refresh(new_appointment)
     
     return {"message": "Appointment requested successfully!", "appointment_id": new_appointment.id}
+
+
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+import os
+from dotenv import load_dotenv
+# This tells FastAPI where to look for the token
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/student/login")
+
+# 1. This tells Python to find the .env file and load the variables
+load_dotenv()
+
+# 2. Now we grab the key safely from the "os" module
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = "HS256"
+
+@router.get("/profile")
+def get_student_profile(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    # 1. Decode the token to get the user's email
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+    
+    # 2. Fetch the student from the database
+    student = db.query(Student).filter(Student.email == email).first()
+    if not student:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
+        
+    # 3. Return the student details (FastAPI will automatically convert this to JSON)
+    return student
