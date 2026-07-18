@@ -133,3 +133,32 @@ def update_appointment_status(
         "new_status": appointment.status
     }
 
+
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+import os
+
+# Update tokenUrl to match your teacher login endpoint
+oauth2_scheme_teacher = OAuth2PasswordBearer(tokenUrl="api/teacher/login")
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = "HS256"
+
+@router.get("/profile")
+def get_teacher_profile(token: str = Depends(oauth2_scheme_teacher), db: Session = Depends(get_db)):
+    # 1. Decode the token to get the teacher's email
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+    
+    # 2. Fetch the teacher from the database (Make sure your Model is imported as Teacher)
+    teacher = db.query(Teacher).filter(Teacher.email == email).first()
+    if not teacher:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Teacher not found")
+        
+    # 3. Return the teacher details
+    return teacher

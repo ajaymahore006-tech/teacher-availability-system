@@ -2,7 +2,8 @@
 .dashboard-body {
     background-color: #f4f7f6;
     margin: 0;
-    padding-top: 70px; /* Space for fixed navbar */
+    padding-top: 70px;
+    /* Space for fixed navbar */
 }
 
 /* ================== NAVBAR ================== */
@@ -13,7 +14,7 @@
     width: 100%;
     height: 70px;
     background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -21,52 +22,52 @@
     z-index: 1000;
 }
 
-
-/* ================== CUSTOM DFA LOGO ================== */
-.dash-logo-nav .logo {
-    height: 68px; /* Fits perfectly inside the 70px navbar */
-    width: auto; /* Maintains the original shape of your logo */
-    object-fit: contain; /* Prevents the image from stretching or squishing */
-    cursor: pointer; /* Makes it feel clickable like a home button */
-    transition: transform 0.2s ease-in-out; /* Smooth animation setup */
-    
-}
-
-/* Adds a premium "pop" effect when the user hovers over it */
-.dash-logo-nav .logo:hover {
-    transform: scale(1.05);
-}
-
-/* ================== NAVBAR UPGRADES ================== */
-
 /* 1. Group the Logo and Links together */
 .dash-logo-nav {
     display: flex;
     align-items: center;
-    gap: 40px; /* Creates nice breathing room between logo and links */
+    gap: 40px;
 }
 
+.dash-logo-nav .logo {
+    height: 68px;
+    width: auto;
+    object-fit: contain;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
 
-/* 3. Widen the Search Bar */
+.dash-logo-nav .logo:hover {
+    transform: scale(1.05);
+}
+
+/* 2. Top Navigation Links */
+.top-nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.top-nav-links a {
+    text-decoration: none;
+    color: #666;
+    font-weight: 600;
+    font-size: 15px;
+    transition: color 0.2s ease;
+}
+
+.top-nav-links a:hover,
+.top-nav-links a.active {
+    color: #0056d2;
+}
+
+/* 3. Search Bar (Unified) */
 .dash-search {
     background: #f0f2f5;
     border-radius: 20px;
-    padding: 10px 20px; /* Slightly thicker */
+    padding: 10px 20px;
     display: flex;
     align-items: center;
-    width: 500px; /* Increased from 400px to fill the void */
-}
-
-
-
-/* Search Bar */
-.dash-search {
-    background: #f0f2f5;
-    border-radius: 20px;
-    padding: 8px 15px;
-    display: flex;
-    align-items: center;
-    width: 400px;
+    width: 500px;
 }
 
 .dash-search i {
@@ -82,7 +83,7 @@
     font-size: 14px;
 }
 
-/* Profile Button */
+/* 4. Profile Button */
 .profile-btn {
     background: transparent;
     border: 1px solid #ddd;
@@ -107,95 +108,124 @@
     color: #0056d2;
 }
 
-/* ================== MAIN CONTAINER ================== */
+/* ================= MAIN CONTAINER ================= */
 .dash-container {
+    padding: 30px;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 30px 20px;
 }
 
-/* ================== WELCOME BANNER ================== */
+/* ================= WELCOME BANNER ================= */
 .welcome-banner {
-    background: linear-gradient(135deg, #0056d2, #1f3f75);
-    border-radius: 16px;
-    padding: 35px 40px;
-    color: white;
+    background: linear-gradient(135deg, #0056d2, #003d99);
+    color: #ffffff;
+    padding: 30px 40px;
+    border-radius: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    box-shadow: 0 8px 20px rgba(0, 86, 210, 0.15);
+    box-shadow: 0 10px 20px rgba(0, 86, 210, 0.2);
+    margin-bottom: 20px;
 }
 
 .banner-text h1 {
     margin: 0 0 10px 0;
     font-size: 28px;
+    color: #ffffff !important;
 }
 
 .banner-text p {
     margin: 0;
-    color: #d1e3ff;
     font-size: 16px;
+    opacity: 0.9;
+    color: #ffffff !important;
 }
 
 .upcoming-badge {
     background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
-    padding: 12px 20px;
-    border-radius: 12px;
+    padding: 10px 20px;
+    border-radius: 30px;
     display: flex;
     align-items: center;
     gap: 10px;
-    font-weight: bold;
+    font-weight: 600;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* ================== TOOLBAR ================== */
+/* ================= TOOLBAR & FILTERS (Unified) ================= */
 .toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 10px;
     margin-bottom: 25px;
 }
 
 .toolbar h2 {
     color: #333;
     margin: 0;
+    font-size: 22px;
 }
 
 .filter-select {
     padding: 10px 15px;
     border-radius: 8px;
     border: 1px solid #ccc;
-    background: white;
+    background: #ffffff;
     outline: none;
     font-size: 14px;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-/* ================== TEACHERS GRID ================== */
+.filter-select:hover,
+.filter-select:focus {
+    border-color: #0056d2;
+    box-shadow: 0 0 5px rgba(0, 86, 210, 0.2);
+}
+
+/* ================= GRIDS ================= */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
 .teachers-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 25px;
+    margin-top: 20px;
+    min-height: 200px;
+    /* Space for loading spinner */
 }
 
-/* Teacher Card (For JS Injection) */
+/* ================= CARDS & 3D HOVER (Unified) ================= */
+.feature-card,
 .teacher-card {
-    background: white;
+    background: #ffffff;
+    padding: 30px 20px;
     border-radius: 12px;
-    padding: 25px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-    transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid #eee;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid transparent;
+    /* Required for smooth border transition */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.feature-card:hover,
 .teacher-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 20px 30px rgba(0, 86, 210, 0.15);
+    border-color: rgba(0, 86, 210, 0.3);
+    z-index: 10;
 }
 
-/* ================== PROFILE MODAL SPECIFICS ================== */
+/* ================= PROFILE MODAL SPECIFICS ================= */
 .profile-card {
     max-width: 400px;
     text-align: center;
@@ -231,38 +261,67 @@
     color: #444;
 }
 
+/* ================= PAGE LOAD ANIMATION (STAGGERED) ================= */
+.features-grid .feature-card {
+    opacity: 0;
+}
 
-/* ================== RESPONSIVE DESIGN (MOBILE) ================== */
+.features-grid .feature-card:nth-child(1) {
+    animation: fadeSlideUp 0.6s ease-out 0.1s forwards;
+}
+
+.features-grid .feature-card:nth-child(2) {
+    animation: fadeSlideUp 0.6s ease-out 0.3s forwards;
+}
+
+.features-grid .feature-card:nth-child(3) {
+    animation: fadeSlideUp 0.6s ease-out 0.5s forwards;
+}
+
+@keyframes fadeSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================= RESPONSIVE DESIGN (MOBILE) ================= */
 @media (max-width: 768px) {
-    /* 1. Make the navbar taller and let items wrap to a new line */
     .dash-navbar {
-        padding: 15px; 
-        height: auto; 
-        flex-wrap: wrap; 
+        padding: 15px;
+        height: auto;
+        flex-wrap: wrap;
         gap: 15px;
     }
 
-    /* 2. Push the search bar to the second row and make it full width */
     .dash-search {
-        order: 3; 
-        width: 100%; 
+        order: 3;
+        width: 100%;
     }
-    
+
+    .top-nav-links {
+        display: none;
+    }
+
     .profile-btn i {
         margin: 0;
         font-size: 22px;
     }
 
-    /* 4. Fix the Main Container spacing since the navbar is now taller */
     .dashboard-body {
-        padding-top: 130px; 
+        padding-top: 130px;
     }
 
-    /* 5. Teacher Cards */
-    .teachers-grid {
+    .teachers-grid,
+    .features-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .welcome-banner {
         flex-direction: column;
         text-align: center;

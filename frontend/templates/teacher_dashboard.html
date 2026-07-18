@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - DFA</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+</head>
+
+<body class="dashboard-body">
+
+    <header class="dash-navbar">
+        <div class="dash-logo-nav">
+            <img src="/assets/dfa_logo.png" alt="DFA Logo" class="logo">
+
+            <nav class="top-nav-links">
+                <a href="#" class="active">Dashboard</a>
+                <a href="#">Schedule</a>
+                <a href="#">Attendance</a>
+                <a href="#">Appointments</a>
+            </nav>
+        </div>
+
+        <div class="dash-profile">
+            <button class="profile-btn" onclick="openProfileModal()">
+                <i class="fa-solid fa-chalkboard-user"></i> My Profile
+            </button>
+        </div>
+    </header>
+
+    <main class="dash-container">
+
+        <section class="welcome-banner" style="background: linear-gradient(135deg, #1f3f75, #001f3f);">
+            <div class="banner-text">
+                <h1 id="welcome-text">Welcome, Professor!</h1>
+                <p>Manage your classes, track attendance, and accept student appointments.</p>
+            </div>
+            <div class="upcoming-badge">
+                <i class="fa-solid fa-users-rectangle"></i>
+                <span>Next Class in 30 mins</span>
+            </div>
+        </section>
+
+        <div class="toolbar">
+            <h2>Faculty Controls</h2>
+        </div>
+
+        <div class="teachers-grid">
+            <div class="teacher-card">
+                <i class="fa-solid fa-calendar-days" style="font-size: 40px; color: #0056d2; margin-bottom: 15px;"></i>
+                <h3>Daily Timetable</h3>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Set up your weekly lectures and labs.</p>
+                <button class="btn" style="width: 100%;" onclick="alert('Timetable feature coming next!')">Manage
+                    Schedule</button>
+            </div>
+
+            <div class="teacher-card">
+                <i class="fa-solid fa-clipboard-user" style="font-size: 40px; color: #28a745; margin-bottom: 15px;"></i>
+                <h3>Live Attendance</h3>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Mark student attendance for today's
+                    classes.</p>
+                <button class="btn" style="width: 100%; background-color: #28a745;"
+                    onclick="alert('Attendance feature coming soon!')">Take Attendance</button>
+            </div>
+
+            <div class="teacher-card">
+                <i class="fa-solid fa-handshake-angle"
+                    style="font-size: 40px; color: #dc3545; margin-bottom: 15px;"></i>
+                <h3>Appointments</h3>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Review and approve student meeting
+                    requests.</p>
+                <button class="btn" style="width: 100%; background-color: #dc3545;"
+                    onclick="alert('Appointments coming soon!')">View Requests</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="profile-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+            <i class="fa-solid fa-chalkboard-user" style="font-size: 50px; color: #0056d2; margin-bottom: 15px;"></i>
+
+            <h2 id="profile-name" style="margin-bottom: 5px;">Loading...</h2>
+            <p id="profile-email" style="color: #666; margin-bottom: 15px;">Loading...</p>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: left; margin-bottom: 20px;">
+                <p style="margin: 5px 0;"><strong>Department:</strong> <span id="profile-dept">Loading...</span></p>
+                <p style="margin: 5px 0;"><strong>Role:</strong> Faculty / Teacher</p>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-google" style="flex: 1;" onclick="openChangePasswordModal()">
+                    <i class="fa-solid fa-key"></i> Password
+                </button>
+                <button class="btn" style="flex: 1; background-color: #dc3545;" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="change-password-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeChangePasswordModal()">&times;</button>
+            <h2 style="text-align: center; color: #0056d2; margin-bottom: 5px;">Secure Update</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 25px;">Update password for <strong
+                    id="cp-email-display"></strong></p>
+
+            <div id="cp-message"
+                style="display: none; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; text-align: center;">
+            </div>
+
+            <form id="cp-step1">
+                <button type="submit" class="btn" id="cp-send-btn">Send 2FA Code to Email</button>
+            </form>
+
+            <form id="cp-step2" style="display: none;">
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px; text-align: center;">Enter
+                        6-Digit OTP</label>
+                    <input type="text" id="cp-otp" required placeholder="123456"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; text-align: center; letter-spacing: 4px; font-size: 18px; font-weight: bold;">
+                </div>
+
+                <div class="form-group" style="text-align: left; margin-bottom: 20px; position: relative;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">New Password</label>
+                    <input type="password" id="cp-new-password" required placeholder="Min. 8 characters"
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; padding-right: 40px;">
+                    <i class="fa-solid fa-eye-slash" id="toggle-cp-password"
+                        style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #666;"
+                        onclick="toggleCpPasswordVisibility()"></i>
+                </div>
+                <button type="submit" class="btn" style="background-color: #28a745; width: 100%;">Secure
+                    Update</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/api.js"></script>
+
+    <script>
+        // Page Protection & Load Logic
+        document.addEventListener("DOMContentLoaded", () => {
+            // Check if the user is a logged-in TEACHER
+            const token = checkAuth("teacher");
+            if (token && typeof fetchTeacherProfile === "function") {
+                fetchTeacherProfile(); // Fetch their data immediately!
+            }
+        });
+
+        // Simple functions to open/close the profile modal
+        function openProfileModal() {
+            document.getElementById('profile-modal').style.display = 'flex';
+            document.body.classList.add('modal-open'); // BACKGROUND FREEZE
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profile-modal').style.display = 'none';
+            document.body.classList.remove('modal-open'); // BACKGROUND UNFREEZE
+        }
+    </script>
+</body>
+
+</html>

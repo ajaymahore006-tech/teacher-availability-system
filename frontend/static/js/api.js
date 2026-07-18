@@ -500,3 +500,48 @@ async function fetchStudentProfile() {
     }
 }
 
+
+// ==========================================
+// TEACHER PROFILE: Fetch & Display Details
+// ==========================================
+async function fetchTeacherProfile() {
+    const token = localStorage.getItem("teacher_token");
+    
+    // If there is no token, don't even try to fetch
+    if (!token) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/teacher/profile`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (response.ok) {
+            const teacher = await response.json();
+            
+            // 1. Inject the data into the Profile Modal
+            // (Adjust teacher.name / teacher.username based on your specific database columns)
+            const teacherName = teacher.name || teacher.username || "Unknown Professor";
+            
+            document.getElementById("profile-name").textContent = teacherName;
+            document.getElementById("profile-email").textContent = teacher.email || "No Email";
+            document.getElementById("profile-dept").textContent = teacher.department || "General";
+            
+            // 2. Dynamically update the Welcome Banner on the dashboard!
+            const welcomeText = document.getElementById("welcome-text");
+            if(welcomeText) {
+                welcomeText.textContent = `Welcome, Prof. ${teacherName}!`;
+            }
+            
+        } else {
+            console.error("Failed to load teacher profile data");
+            document.getElementById("profile-email").textContent = "Error loading data";
+        }
+    } catch (error) {
+        console.error("Server connection error:", error);
+        document.getElementById("profile-email").textContent = "Connection error";
+    }
+}

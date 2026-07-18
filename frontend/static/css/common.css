@@ -1,107 +1,132 @@
-/* ---------- RESET ---------- */
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+/* ================= CUSTOM SCROLLBAR ================= */
+::-webkit-scrollbar {
+    width: 8px;
+    /* Patla aur modern */
+    height: 8px;
+    /* Horizontal scroll ke liye */
 }
 
-body{
+::-webkit-scrollbar-track {
+    background: #f0f2f5;
+    /* Light grey background */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #0056d2;
+    /* Aapka premium DFA Blue */
+    border-radius: 10px;
+    /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #003d99;
+    /* Hover karne par dark blue */
+}
+
+/* ---------- RESET ---------- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
     font-family: "Segoe UI", sans-serif;
-    background:#f4f6f9;
-    color:#333;
+    background: #f4f6f9;
+    color: #333;
 }
 
 /* ---------- BUTTON ---------- */
 
-.btn{
-    width:100%;
-    padding:12px 18px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
+.btn {
+    width: 100%;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
 
-    font-size:15px;
-    font-weight:600;
+    font-size: 15px;
+    font-weight: 600;
 
-    transition:.25s;
+    transition: .25s;
 
-    background:#0056d2;
-    color:white;
+    background: #0056d2;
+    color: white;
 }
 
-.btn:hover{
-    background:#0041a8;
+.btn:hover {
+    background: #0041a8;
 }
 
 /* ---------- GOOGLE BUTTON ---------- */
 
-.btn-google{
+.btn-google {
 
-    background:white;
-    color:#444;
+    background: white;
+    color: #444;
 
-    border:1px solid #ddd;
+    border: 1px solid #ddd;
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-    gap:12px;
+    gap: 12px;
 }
 
-.btn-google:hover{
+.btn-google:hover {
 
-    background:#f7f7f7;
-    border-color:#bbb;
+    background: #f7f7f7;
+    border-color: #bbb;
 }
 
-.btn-google i{
+.btn-google i {
 
-    font-size:18px;
-    color:#DB4437;
+    font-size: 18px;
+    color: #DB4437;
 }
 
 /* ---------- DIVIDER ---------- */
 
-.divider{
+.divider {
 
-    display:flex;
-    align-items:center;
+    display: flex;
+    align-items: center;
 
-    margin:25px 0;
+    margin: 25px 0;
 }
 
 .divider::before,
-.divider::after{
+.divider::after {
 
-    content:"";
-    flex:1;
+    content: "";
+    flex: 1;
 
-    border-bottom:1px solid #ddd;
+    border-bottom: 1px solid #ddd;
 }
 
-.divider span{
+.divider span {
 
-    margin:0 12px;
-    color:#888;
-    font-size:14px;
+    margin: 0 12px;
+    color: #888;
+    font-size: 14px;
 }
 
 /* ---------- LINKS ---------- */
 
 .auth-link,
-.back-link{
+.back-link {
 
-    color:#0056d2;
-    text-decoration:none;
-    font-size:14px;
+    color: #0056d2;
+    text-decoration: none;
+    font-size: 14px;
 }
 
 .auth-link:hover,
-.back-link:hover{
+.back-link:hover {
 
-    text-decoration:underline;
+    text-decoration: underline;
 }
 
 
@@ -110,29 +135,48 @@ body{
 /* MODAL OVERLAY STYLES (For Login Popup)    */
 /* ========================================= */
 
+/* ================= MODAL OVERLAY (BULLETPROOF FIX) ================= */
 .modal-overlay {
+    position: fixed !important; 
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.5); 
+    
     display: none; /* Hidden by default */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); /* The dark, dimmed background */
-    z-index: 9999; /* Make sure it floats above everything else */
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(3px); /* Optional: Adds a professional blur effect */
+    justify-content: center; 
+    align-items: center; 
+    
+    z-index: 99999 !important; /* Sabse upar rakhne ke liye */
 }
 
+/* Modal Content ko adjust karenge taaki choti screen par scroll ho sake par page lock rahe */
 .modal-content {
-    background: white;
-    padding: 40px;
-    border-radius: 14px;
-    width: 100%;
-    max-width: 430px;
+    max-height: 90vh; /* Screen se bada na ho */
+    overflow-y: auto; /* Agar modal lamba hai, toh sirf modal ke andar scroll hoga */
+}
+
+/* ================= GLASSMORPHISM MODALS ================= */
+.modal-content {
+    width: 90%;
+    max-width: 450px;
+    padding: 30px;
+    border-radius: 15px;
+
+    /* The Glass Effect Magic */
+    background: rgba(255, 255, 255, 0.85);
+    /* Thoda transparent white */
+    backdrop-filter: blur(16px);
+    /* Background ko blur karega */
+    -webkit-backdrop-filter: blur(16px);
+    /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    /* Ek chamakti hui border edge */
+
+    /* 3D Floating Shadow */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
     position: relative;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-    animation: slideDown 0.3s ease-out; /* Smooth entrance */
 }
 
 .close-btn {
@@ -151,8 +195,15 @@ body{
 }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Hide default browser password reveal icons */
@@ -160,4 +211,37 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear,
 input[type="password"]::-webkit-reveal {
     display: none !important;
+}
+
+
+/* ================= PAGE LOAD ANIMATION ================= */
+@keyframes fadeSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Apply animation to main containers */
+.hero, .features, .dash-container {
+    animation: fadeSlideUp 0.8s ease-out forwards;
+}
+
+/* Staggered loading for Teacher Cards (Ek ke baad ek load honge) */
+.teachers-grid .teacher-card {
+    opacity: 0; /* Initially hidden */
+}
+.teachers-grid .teacher-card:nth-child(1) { animation: fadeSlideUp 0.6s ease-out 0.1s forwards; }
+.teachers-grid .teacher-card:nth-child(2) { animation: fadeSlideUp 0.6s ease-out 0.3s forwards; }
+.teachers-grid .teacher-card:nth-child(3) { animation: fadeSlideUp 0.6s ease-out 0.5s forwards; }
+
+
+
+/* ================= PREVENT BACKGROUND SCROLL ================= */
+body.modal-open {
+    overflow: hidden !important; /* Ye scrollbar ko hide kar dega aur page ko freeze kar dega */
 }

@@ -30,11 +30,11 @@
     </header>
 
     <main class="dash-container">
-
+        
         <section class="welcome-banner">
             <div class="banner-text">
-                <h1>Welcome back, Student!</h1>
-                <p>Find your faculty and book your appointments instantly.</p>
+                <h1 id="welcome-text">Welcome back, Student!</h1>
+                <p>Find your faculty, manage appointments, and track your schedule.</p>
             </div>
             <div class="upcoming-badge">
                 <i class="fa-regular fa-calendar-check"></i>
@@ -42,9 +42,36 @@
             </div>
         </section>
 
-        <div class="toolbar">
+        <div class="toolbar" style="margin-top: 30px;">
+            <h2>Student Services</h2>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fa-solid fa-calendar-days" style="font-size: 40px; color: #0056d2; margin-bottom: 15px;"></i>
+                <h3>Daily Timetable</h3>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Check your upcoming lectures and labs for today.</p>
+                <button class="btn" style="width: 100%;" onclick="alert('Timetable opening...')">View Schedule</button>
+            </div>
+
+            <div class="feature-card">
+                <i class="fa-solid fa-user-check" style="font-size: 40px; color: #28a745; margin-bottom: 15px;"></i>
+                <h3>My Attendance</h3>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Track your live attendance percentage and history.</p>
+                <button class="btn" style="width: 100%; background-color: #28a745;" onclick="alert('Attendance opening...')">Check Attendance</button>
+            </div>
+
+            <div class="feature-card">
+                <i class="fa-solid fa-calendar-check" style="font-size: 40px; color: #dc3545; margin-bottom: 15px;"></i>
+                <h3>Book Appointment</h3>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Request a one-on-one meeting with your faculty.</p>
+                <button class="btn" style="width: 100%; background-color: #dc3545;" onclick="alert('Booking engine opening...')">Request Meeting</button>
+            </div>
+        </div>
+
+        <div class="toolbar" style="margin-top: 40px;">
             <h2>Available Faculty</h2>
-            <select id="department-filter" class="filter-select">
+            <select id="department-filter" class="filter-select" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ccc; outline: none; font-family: inherit;">
                 <option value="all">All Departments</option>
                 <option value="Computer Science">Computer Science</option>
                 <option value="Information Technology">Information Technology</option>
@@ -54,12 +81,11 @@
 
         <div id="teachers-list" class="teachers-grid">
             <p style="text-align: center; color: #666; grid-column: 1 / -1; padding: 40px;">
-                <i class="fa-solid fa-spinner fa-spin"
-                    style="font-size: 24px; color: #0056d2; margin-bottom: 10px;"></i><br>
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #0056d2; margin-bottom: 10px;"></i><br>
                 Loading available teachers...
             </p>
         </div>
-
+        
     </main>
 
     <div id="profile-modal" class="modal-overlay">
