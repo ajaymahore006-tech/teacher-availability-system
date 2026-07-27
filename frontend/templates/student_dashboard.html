@@ -12,11 +12,11 @@
 
 <body class="dashboard-body">
 
-   <header class="dash-navbar">
+    <header class="dash-navbar">
         <div class="dash-logo-nav">
             <img src="/assets/dfa_logo.png" alt="DFA Logo" class="logo">
         </div>
-        
+
         <div class="dash-search">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="search-teacher" placeholder="Search for faculty or departments...">
@@ -30,7 +30,7 @@
     </header>
 
     <main class="dash-container">
-        
+
         <section class="welcome-banner">
             <div class="banner-text">
                 <h1 id="welcome-text">Welcome back, Student!</h1>
@@ -50,28 +50,34 @@
             <div class="feature-card">
                 <i class="fa-solid fa-calendar-days" style="font-size: 40px; color: #0056d2; margin-bottom: 15px;"></i>
                 <h3>Daily Timetable</h3>
-                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Check your upcoming lectures and labs for today.</p>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Check your upcoming lectures and labs for
+                    today.</p>
                 <button class="btn" style="width: 100%;" onclick="alert('Timetable opening...')">View Schedule</button>
             </div>
 
             <div class="feature-card">
                 <i class="fa-solid fa-user-check" style="font-size: 40px; color: #28a745; margin-bottom: 15px;"></i>
                 <h3>My Attendance</h3>
-                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Track your live attendance percentage and history.</p>
-                <button class="btn" style="width: 100%; background-color: #28a745;" onclick="alert('Attendance opening...')">Check Attendance</button>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Track your live attendance percentage and
+                    history.</p>
+                <button class="btn" style="width: 100%; background-color: #28a745;"
+                    onclick="alert('Attendance opening...')">Check Attendance</button>
             </div>
 
             <div class="feature-card">
                 <i class="fa-solid fa-calendar-check" style="font-size: 40px; color: #dc3545; margin-bottom: 15px;"></i>
                 <h3>Book Appointment</h3>
-                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Request a one-on-one meeting with your faculty.</p>
-                <button class="btn" style="width: 100%; background-color: #dc3545;" onclick="alert('Booking engine opening...')">Request Meeting</button>
+                <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Request a one-on-one meeting with your
+                    faculty.</p>
+                <button class="btn" style="width: 100%; background-color: #dc3545;"
+                    onclick="openAppointmentModal()">Request Meeting</button>
             </div>
         </div>
 
         <div class="toolbar" style="margin-top: 40px;">
             <h2>Available Faculty</h2>
-            <select id="department-filter" class="filter-select" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ccc; outline: none; font-family: inherit;">
+            <select id="department-filter" class="filter-select"
+                style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ccc; outline: none; font-family: inherit;">
                 <option value="all">All Departments</option>
                 <option value="Computer Science">Computer Science</option>
                 <option value="Information Technology">Information Technology</option>
@@ -81,11 +87,12 @@
 
         <div id="teachers-list" class="teachers-grid">
             <p style="text-align: center; color: #666; grid-column: 1 / -1; padding: 40px;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; color: #0056d2; margin-bottom: 10px;"></i><br>
+                <i class="fa-solid fa-spinner fa-spin"
+                    style="font-size: 24px; color: #0056d2; margin-bottom: 10px;"></i><br>
                 Loading available teachers...
             </p>
         </div>
-        
+
     </main>
 
     <div id="profile-modal" class="modal-overlay">
@@ -147,13 +154,53 @@
 
                     <i class="fa-solid fa-eye-slash" id="toggle-cp-password"
                         style="position: absolute; right: 15px; top: 38px; cursor: pointer; color: #666;"
-                        onclick="toggleCpPasswordVisibility()"></i>
+                        onclick="togglePasswordVisibility('cp-new-password', 'toggle-cp-password')"></i>
                 </div>
 
                 <button type="submit" class="btn" style="background-color: #28a745; width: 100%;">Secure Update</button>
             </form>
         </div>
     </div>
+
+    <div id="appointment-modal" class="modal-overlay">
+        <div class="modal-content profile-card">
+            <button class="close-btn" onclick="closeAppointmentModal()">&times;</button>
+
+            <h2 style="color: #0056d2; margin-bottom: 5px; text-align: center;">Request Resolution</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px; text-align: center;">Send a doubt or meeting
+                request directly to the faculty</p>
+
+            <form id="appointment-form" onsubmit="submitAppointmentRequest(event)">
+
+                <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Search Faculty</label>
+                    <input list="faculty-list" id="appointment-teacher" required placeholder="Type name to search..."
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #f8f9fa;">
+
+                    <datalist id="faculty-list">
+                        <option value="Dr. Smith - Computer Science"></option>
+                        <option value="Prof. Johnson - Mathematics"></option>
+                    </datalist>
+                </div>
+
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label style="display: block; font-weight: bold; margin-bottom: 5px;">Reason for Request / Your
+                        Doubt</label>
+                    <textarea id="appointment-reason" rows="4" required
+                        placeholder="E.g., I have a doubt in Chapter 3, or I want to see my mid-sem paper..."
+                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: none; font-family: inherit;"></textarea>
+                </div>
+
+                <div id="queue-status"
+                    style="display: none; padding: 12px; border-radius: 5px; margin-bottom: 15px; text-align: center; font-size: 14px; font-weight: 500;">
+                </div>
+
+                <button type="submit" id="submit-ticket-btn" class="btn"
+                    style="width: 100%; background-color: #dc3545;">Send Ticket</button>
+            </form>
+        </div>
+    </div>
+
 
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/api.js"></script>
@@ -170,29 +217,54 @@
         }
 
         // ==========================================
-        // CHANGE PASSWORD (OTP) LOGIC
+        // APPOINTMENT MODAL LOGIC (FIXED CENTERING)
         // ==========================================
-        function openChangePasswordModal() {
-            // Grab the email directly from the profile modal
-            const email = document.getElementById("profile-email").textContent;
-
-            if (!email || email === "Loading...") {
-                alert("Please wait for your profile to load completely.");
-                return;
+        function openAppointmentModal() {
+            // 1. Use "flex" instead of "block" to respect your CSS centering rules!
+            const modalElement = document.getElementById('appointment-modal');
+            if (modalElement) {
+                modalElement.style.display = "flex";
             }
 
-            document.getElementById("cp-email-display").textContent = email;
-            closeProfileModal();
-            document.getElementById('change-password-modal').style.display = 'flex';
+            // 2. Clear out the old success message banner
+            const queueStatus = document.getElementById('queue-status');
+            if (queueStatus) {
+                queueStatus.style.display = "none";
+                queueStatus.innerText = "";
+            }
+
+            // 3. Reset form inputs and ensure they are enabled
+            const formElement = document.getElementById('appointment-form');
+            if (formElement) {
+                formElement.reset();
+                const inputs = formElement.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => input.disabled = false);
+            }
+
+            // 4. Reset submit button
+            const submitBtn = document.getElementById('submit-ticket-btn');
+            if (submitBtn) {
+                submitBtn.innerText = "Send Ticket";
+                submitBtn.disabled = false;
+            }
         }
 
-        function closeChangePasswordModal() {
-            document.getElementById('change-password-modal').style.display = 'none';
-            // Reset the forms for next time
-            document.getElementById("cp-step1").style.display = "block";
-            document.getElementById("cp-step2").style.display = "none";
-            document.getElementById("cp-message").style.display = "none";
+        function closeAppointmentModal() {
+            const modalElement = document.getElementById('appointment-modal');
+            if (modalElement) {
+                modalElement.style.display = 'none';
+            }
+            document.body.classList.remove('modal-open');
+
+            // Reset form inputs for next time
+            const formElement = document.getElementById('appointment-form');
+            if (formElement) {
+                formElement.reset();
+                const inputs = formElement.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => input.disabled = false);
+            }
         }
+
 
         // Handle Step 1: Sending the OTP
         document.getElementById("cp-step1").addEventListener("submit", async (e) => {

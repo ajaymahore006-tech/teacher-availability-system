@@ -40,21 +40,26 @@ function closeLoginModal() {
     document.getElementById('login-modal').style.display = 'none';
 }
 
-function togglePasswordVisibility() {
-    const passwordInput = document.getElementById("password");
-    const toggleIcon = document.getElementById("toggle-password");
+// ==========================================
+// UNIVERSAL PASSWORD VISIBILITY TOGGLE
+// ==========================================
+function togglePasswordVisibility(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const toggleIcon = document.getElementById(iconId);
 
-    // If it is hidden, show it and OPEN the eye
+    if (!passwordInput || !toggleIcon) return; // Error bachane ke liye
+
+    // If hidden, show it and OPEN the eye
     if (passwordInput.type === "password") {
         passwordInput.type = "text";
-        toggleIcon.classList.remove("fa-eye-slash");
-        toggleIcon.classList.add("fa-eye");
+        toggleIcon.className = "fa-solid fa-eye"; // Force exact classes
+        toggleIcon.style.color = "#0056d2"; // Premium blue color
     }
-    // If it is visible, hide it and SLASH the eye
+    // If visible, hide it and SLASH the eye
     else {
         passwordInput.type = "password";
-        toggleIcon.classList.remove("fa-eye");
-        toggleIcon.classList.add("fa-eye-slash");
+        toggleIcon.className = "fa-solid fa-eye-slash"; // Force exact classes
+        toggleIcon.style.color = "#666"; // Return to grey
     }
 }
 
@@ -91,10 +96,16 @@ function openSignupModal() {
 
 function closeSignupModal() {
     document.getElementById('signup-modal').style.display = 'none';
-    // Reset inputs when closed
+    document.body.classList.remove('modal-open'); // 1. Scroll Unfreeze
+
+    // 2. Reset Step Visibility
     document.getElementById("details-form").style.display = "block";
     document.getElementById("otp-form").style.display = "none";
     document.getElementById("signup-message").style.display = "none";
+
+    // 3. Clear Typed Text (Form Reset)
+    document.getElementById("details-form").reset();
+    document.getElementById("otp-form").reset();
 }
 
 function switchModalToLogin() {
@@ -110,11 +121,16 @@ function openForgotModal() {
 
 function closeForgotModal() {
     document.getElementById('forgot-modal').style.display = 'none';
-    // Reset the forms so it's fresh next time it opens
+    document.body.classList.remove('modal-open'); // 1. Scroll Unfreeze
+
+    // 2. Reset Step Visibility
     document.getElementById("forgot-step1").style.display = "block";
     document.getElementById("forgot-step2").style.display = "none";
     document.getElementById("forgot-message").style.display = "none";
 
+    // 3. Clear Typed Text (Form Reset)
+    document.getElementById("forgot-step1").reset();
+    document.getElementById("forgot-step2").reset();
 }
 
 // ==========================================
@@ -135,29 +151,16 @@ function openChangePasswordModal() {
 
 function closeChangePasswordModal() {
     document.getElementById('change-password-modal').style.display = 'none';
+    document.body.classList.remove('modal-open'); // 1. Scroll Unfreeze
 
-    // Reset the forms so it's fresh next time
+    // 2. Reset Step Visibility
     document.getElementById("cp-step1").style.display = "block";
     document.getElementById("cp-step2").style.display = "none";
     document.getElementById("cp-message").style.display = "none";
-}
 
-function toggleCpPasswordVisibility() {
-    const passwordInput = document.getElementById("cp-new-password");
-    const toggleIcon = document.getElementById("toggle-cp-password");
-
-    // If it is hidden, show it and OPEN the eye
-    if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-        toggleIcon.classList.remove("fa-eye-slash");
-        toggleIcon.classList.add("fa-eye");
-    }
-    // If it is visible, hide it and SLASH the eye
-    else {
-        passwordInput.type = "password";
-        toggleIcon.classList.remove("fa-eye");
-        toggleIcon.classList.add("fa-eye-slash");
-    }
+    // 3. Clear Typed Text (Form Reset)
+    document.getElementById("cp-step1").reset();
+    document.getElementById("cp-step2").reset();
 }
 
 function switchForgotToLogin() {
@@ -177,7 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const messageBox = document.getElementById("signup-message");
 
     // --- LOGIN FORM SUBMIT LISTENER ---
-    // --- LOGIN FORM SUBMIT LISTENER ---
     if (modalLoginForm) {
         modalLoginForm.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -186,19 +188,20 @@ document.addEventListener("DOMContentLoaded", () => {
             const password = document.getElementById("password").value;
 
             try {
-                // YAHAN CHANGE KIYA HAI: Ab hum JSON format bhej rahe hain!
+                // Sending JSON because your backend expects StudentLogin(BaseModel) with 'email'
                 const response = await fetch(`${API_BASE_URL}/api/${role}/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        email: email,
-                        password: password
+                        email: email,       // Matches your Pydantic schema key
+                        password: password  // Matches your Pydantic schema key
                     })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Successfully saving the token string
                     localStorage.setItem(`${role}_token`, data.access_token);
                     window.location.href = `${role}_dashboard.html`;
                 } else {
@@ -210,7 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 errorMessage.style.display = "block";
             }
         });
-
     }
 
     // --- SIGNUP STEP 1: SEND OTP ---
@@ -266,7 +268,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 otp: document.getElementById("signup-otp").value
             };
 
-            // Fix: Changed 'student_id' to 'roll_no' to match FastAPI's Pydantic schema
             if (role === "student") {
                 payload.roll_no = document.getElementById("dynamic-input").value;
             } else {
@@ -280,20 +281,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     body: JSON.stringify(payload)
                 });
 
-                // Ab JSON har haal mein parse karna padega token nikalne ke liye
                 const data = await response.json();
 
                 if (response.ok) {
-                    // 1. JWT Token ko browser storage mein save karo
+                    // Correctly saving the access_token string for signup!
                     localStorage.setItem(`${role}_token`, data.access_token);
 
-                    // 2. Success message dikhao
                     messageBox.style.background = "#e6f4ea";
                     messageBox.style.color = "#28a745";
                     messageBox.innerHTML = "<strong>Success!</strong> Account created. Logging you in...";
                     otpForm.style.display = "none";
 
-                    // 3. 1.5 seconds baad sidha dashboard par redirect!
                     setTimeout(() => {
                         window.location.href = `${role}_dashboard.html`;
                     }, 1500);
@@ -394,36 +392,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// ==========================================
-// STUDENT DASHBOARD: Fetch & Display Teachers
-// ==========================================
-async function fetchTeachers() {
-    const token = localStorage.getItem("student_token");
-    const teachersListDiv = document.getElementById("teachers-list");
-
-    if (!teachersListDiv) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/student/teachers`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
-
-        if (response.ok) {
-            const teachers = await response.json();
-            displayTeachers(teachers);
-        } else {
-            teachersListDiv.innerHTML = "<p style='color:red;'>Failed to load teachers.</p>";
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        teachersListDiv.innerHTML = "<p style='color:red;'>Error connecting to server.</p>";
-    }
-}
-
 function displayTeachers(teachers) {
     const teachersListDiv = document.getElementById("teachers-list");
     teachersListDiv.innerHTML = "";
@@ -455,9 +423,6 @@ function displayTeachers(teachers) {
     });
 }
 
-function bookAppointment(teacherId) {
-    alert("Get ready! We will build the booking feature for Teacher ID: " + teacherId + " next!");
-}
 
 // ==========================================
 // STUDENT PROFILE: Fetch & Display Details (UPDATED FOR MODAL)
@@ -506,7 +471,7 @@ async function fetchStudentProfile() {
 // ==========================================
 async function fetchTeacherProfile() {
     const token = localStorage.getItem("teacher_token");
-    
+
     // If there is no token, don't even try to fetch
     if (!token) return;
 
@@ -521,21 +486,21 @@ async function fetchTeacherProfile() {
 
         if (response.ok) {
             const teacher = await response.json();
-            
+
             // 1. Inject the data into the Profile Modal
             // (Adjust teacher.name / teacher.username based on your specific database columns)
             const teacherName = teacher.name || teacher.username || "Unknown Professor";
-            
+
             document.getElementById("profile-name").textContent = teacherName;
             document.getElementById("profile-email").textContent = teacher.email || "No Email";
             document.getElementById("profile-dept").textContent = teacher.department || "General";
-            
+
             // 2. Dynamically update the Welcome Banner on the dashboard!
             const welcomeText = document.getElementById("welcome-text");
-            if(welcomeText) {
+            if (welcomeText) {
                 welcomeText.textContent = `Welcome, Prof. ${teacherName}!`;
             }
-            
+
         } else {
             console.error("Failed to load teacher profile data");
             document.getElementById("profile-email").textContent = "Error loading data";
@@ -545,3 +510,162 @@ async function fetchTeacherProfile() {
         document.getElementById("profile-email").textContent = "Connection error";
     }
 }
+
+
+// ==========================================
+// SUBMIT TICKET / APPOINTMENT REQUEST
+// ==========================================
+async function submitAppointmentRequest(event) {
+    event.preventDefault();
+
+    const teacherInputValue = document.getElementById('appointment-teacher').value;
+    const reason = document.getElementById('appointment-reason').value;
+    const submitBtn = document.getElementById('submit-ticket-btn');
+    const queueStatus = document.getElementById('queue-status');
+    const datalist = document.getElementById('faculty-list');
+    const appointmentForm = document.getElementById('appointment-form');
+
+    const selectedOption = Array.from(datalist.options).find(opt => opt.value === teacherInputValue);
+
+    if (!selectedOption) {
+        showStableBanner(queueStatus, "Please select a valid faculty member from the list.", "error");
+        return;
+    }
+
+    const teacherId = selectedOption.getAttribute('data-id');
+
+    if (!reason) {
+        showStableBanner(queueStatus, "Please provide a reason for your request.", "error");
+        return;
+    }
+
+    // 1. Loading State
+    const originalBtnText = submitBtn.innerText;
+    submitBtn.innerText = "Sending Request...";
+    submitBtn.disabled = true;
+    showStableBanner(queueStatus, "⏳ Sending your request...", "loading");
+
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/student/book-appointment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('student_token')}`
+            },
+            body: JSON.stringify({
+                teacher_id: teacherId,
+                purpose: reason
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // 2. Success State: Reset inputs and disable them so form stays stable in place
+            if (appointmentForm) {
+                appointmentForm.reset();
+                const inputs = appointmentForm.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => input.disabled = true);
+            }
+
+            // Show permanent success message inside queue-status
+            showStableBanner(queueStatus, `🎉 ${data.message || "Appointment requested successfully!"}`, "success");
+
+            submitBtn.innerText = "Done";
+            submitBtn.disabled = true;
+
+        } else {
+            throw new Error(data.detail || "Failed to send ticket");
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        showStableBanner(queueStatus, `❌ ${error.message || "Failed to connect to the server."}`, "error");
+        submitBtn.innerText = originalBtnText;
+        submitBtn.disabled = false;
+    }
+}
+
+// Stable Banner helper
+function showStableBanner(element, message, type) {
+    if (!element) return;
+
+    element.style.display = "block";
+    element.style.padding = "15px";
+    element.style.borderRadius = "8px";
+    element.style.fontSize = "14px";
+    element.style.fontWeight = "500";
+    element.style.textAlign = "center";
+    element.style.marginTop = "10px";
+
+    if (type === "success") {
+        element.style.backgroundColor = "#D1FAE5";
+        element.style.color = "#065F46";
+        element.style.border = "1px solid #A7F3D0";
+    } else if (type === "loading") {
+        element.style.backgroundColor = "#EFF6FF";
+        element.style.color = "#1E40AF";
+        element.style.border = "1px solid #BFDBFE";
+    } else {
+        element.style.backgroundColor = "#FEE2E2";
+        element.style.color = "#991B1B";
+        element.style.border = "1px solid #FECACA";
+    }
+    element.innerText = message;
+}
+// ==========================================
+// LOAD TEACHERS LIST (For Student Dashboard)
+// ==========================================
+async function loadTeachersList() {
+    try {
+        // 1. FastAPI se saare teachers fetch karein
+        // Note: Agar aapka route /api/teachers/list hai toh URL adjust kar lijiye
+        const response = await fetch('http://127.0.0.1:8000/api/teacher/list', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                // Agar aapne is route par security (token) lagai hai toh ye un-comment karein:
+                // 'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch teachers list from backend.");
+        }
+
+        const teachers = await response.json(); // Array of Teacher objects
+        const datalist = document.getElementById('faculty-list');
+
+        // 2. Pehle purane/dummy options clear kar dein
+        datalist.innerHTML = '';
+
+        // 3. Har ek teacher ke liye naya option create karein
+        teachers.forEach(teacher => {
+            const option = document.createElement('option');
+
+            // Ye wo text hai jo student ko dropdown mein dikhega 
+            // Aap apne schema ke hisaab se teacher.full_name ya teacher.name use kar sakte hain
+            option.value = `${teacher.name} - ${teacher.department}`;
+
+            // SABSE ZAROORI CHEEZ: Hidden ID attach karna
+            option.setAttribute('data-id', teacher.id);
+
+            datalist.appendChild(option);
+        });
+
+        console.log("Teachers list loaded successfully!");
+
+    } catch (error) {
+        console.error("Error loading teachers:", error);
+    }
+}
+
+// ==========================================
+// AUTO-RUN WHEN PAGE LOADS
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    // Ye check karega ki agar hum Student Dashboard par hain tabhi load kare
+    if (document.getElementById('faculty-list')) {
+        loadTeachersList();
+    }
+});
