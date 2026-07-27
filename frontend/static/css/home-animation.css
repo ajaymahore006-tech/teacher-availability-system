@@ -1,0 +1,144 @@
+/* ===========================================================
+   DFA HOME PAGE ANIMATIONS
+   (Does not modify existing styling)
+   =========================================================== */
+
+/* ---------- Initial State ---------- */
+
+.navbar,
+.hero .card,
+.features .feature,
+footer{
+    opacity:0;
+    will-change:transform,opacity;
+}
+
+/* Hero buttons */
+
+.hero .btn{
+    opacity:0;
+}
+
+
+/* ---------- Navbar ---------- */
+
+.navbar{
+    animation:navReveal .7s ease forwards;
+}
+
+
+/* ---------- Hero Card ---------- */
+
+.hero .card{
+    animation:cardReveal .8s cubic-bezier(.22,1,.36,1) .2s forwards;
+}
+
+
+/* ---------- Buttons ---------- */
+
+.hero .btn:first-of-type{
+    animation:buttonReveal .5s ease .65s forwards;
+}
+
+.hero .btn:last-of-type{
+    animation:buttonReveal .5s ease .85s forwards;
+}
+
+
+/* ---------- Features ---------- */
+
+.features .feature:nth-child(1){
+    animation:featureReveal .6s ease 1s forwards;
+}
+
+.features .feature:nth-child(2){
+    animation:featureReveal .6s ease 1.15s forwards;
+}
+
+.features .feature:nth-child(3){
+    animation:featureReveal .6s ease 1.3s forwards;
+}
+
+
+/* ---------- Footer ---------- */
+
+footer{
+    animation:footerReveal .6s ease 1.45s forwards;
+}
+
+
+/* ===========================================================
+   Keyframes
+   =========================================================== */
+
+@keyframes navReveal{
+
+    from{
+        opacity:0;
+        transform:translateY(-25px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+}
+
+
+@keyframes cardReveal{
+
+    from{
+        opacity:0;
+        transform:translateY(40px) scale(.97);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+}
+
+
+@keyframes buttonReveal{
+
+    from{
+        opacity:0;
+        transform:translateY(15px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+}
+
+
+@keyframes featureReveal{
+
+    from{
+        opacity:0;
+        transform:translateY(35px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+}
+
+
+@keyframes footerReveal{
+
+    from{
+        opacity:0;
+    }
+
+    to{
+        opacity:1;
+    }
+
+}
