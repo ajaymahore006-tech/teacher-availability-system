@@ -73,7 +73,7 @@
                 <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Review and approve student meeting
                     requests.</p>
                 <button class="btn" style="width: 100%; background-color: #dc3545;"
-                    onclick="alert('Appointments coming soon!')">View Requests</button>
+                    onclick="openTeacherAppointmentsModal()">View Requests</button>
             </div>
         </div>
     </main>
@@ -136,6 +136,36 @@
                 <button type="submit" class="btn" style="background-color: #28a745; width: 100%;">Secure
                     Update</button>
             </form>
+        </div>
+    </div>
+
+    <div id="teacher-appointments-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+            <button class="close-btn" onclick="closeTeacherAppointmentsModal()">&times;</button>
+
+            <h2 style="color: #0056d2; margin-bottom: 5px; text-align: center;">Student Appointment Requests</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 20px; text-align: center;">Approve or reject doubts
+                and meetings requested by students.</p>
+
+            <div style="overflow-x: auto; max-height: 400px;">
+                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6; text-align: left;">
+                            <th style="padding: 10px; font-size: 14px;">Student</th>
+                            <th style="padding: 10px; font-size: 14px;">Roll No</th>
+                            <th style="padding: 10px; font-size: 14px;">Purpose / Doubt</th>
+                            <th style="padding: 10px; font-size: 14px;">Status</th>
+                            <th style="padding: 10px; font-size: 14px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacher-appointments-table-body">
+                        <tr>
+                            <td colspan="5" style="padding: 20px; text-align: center; color: #666;">Loading requests...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

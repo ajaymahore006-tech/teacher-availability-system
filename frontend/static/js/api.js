@@ -670,3 +670,106 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+
+// ==========================================
+// TEACHER APPOINTMENTS MODAL & MANAGEMENT
+// ==========================================
+
+function openTeacherAppointmentsModal() {
+    const modal = document.getElementById('teacher-appointments-modal');
+    if (modal) {
+        modal.style.display = "flex"; // Aapke glassmorphism flex overlay ke liye
+        fetchTeacherAppointmentsList();
+    }
+}
+
+function closeTeacherAppointmentsModal() {
+    const modal = document.getElementById('teacher-appointments-modal');
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+async function fetchTeacherAppointmentsList() {
+    const tableBody = document.getElementById('teacher-appointments-table-body');
+    if (!tableBody) return;
+
+    try {
+        const response = await fetch('http://127.0.0.1:8000/api/teacher/appointments', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('teacher_token')}`
+            }
+        });
+
+        const appointments = await response.json();
+
+        if (response.ok) {
+            if (appointments.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #666;">No pending appointment requests.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = "";
+            appointments.forEach(appt => {
+                let badgeBg = "#ffc107"; // Pending
+                let badgeColor = "#000";
+                if (appt.status === "Approved") {
+                    badgeBg = "#28a745";
+                    badgeColor = "#fff";
+                } else if (appt.status === "Rejected") {
+                    badgeBg = "#dc3545";
+                    badgeColor = "#fff";
+                }
+
+                const row = document.createElement('tr');
+                row.style.borderBottom = "1px solid #dee2e6";
+                row.innerHTML = `
+                    <td style="padding: 10px; font-size: 13px;"><b>${appt.student_name || 'Student'}</b><br><span style="color: #666; font-size: 11px;">${appt.student_email || ''}</span></td>
+                    <td style="padding: 10px; font-size: 13px;">${appt.student_roll || 'N/A'}</td>
+                    <td style="padding: 10px; font-size: 13px; max-width: 200px;">${appt.purpose}</td>
+                    <td style="padding: 10px; font-size: 13px;"><span style="padding: 4px 8px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; font-weight: bold; font-size: 11px;">${appt.status}</span></td>
+                    <td style="padding: 10px; text-align: center;">
+                        ${appt.status === 'Pending' ? `
+                            <button onclick="updateTeacherAppointmentStatus(${appt.id}, 'Approved')" class="btn" style="background-color: #28a745; padding: 5px 10px; font-size: 11px; margin-right: 4px;">Accept</button>
+                            <button onclick="updateTeacherAppointmentStatus(${appt.id}, 'Rejected')" class="btn" style="background-color: #dc3545; padding: 5px 10px; font-size: 11px;">Reject</button>
+                        ` : `<span style="color: #888; font-size: 12px; font-style: italic;">Processed</span>`}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+        } else {
+            tableBody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #dc3545;">Failed to load appointments.</td></tr>`;
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        tableBody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #dc3545;">Server connection error.</td></tr>`;
+    }
+}
+
+async function updateTeacherAppointmentStatus(appointmentId, newStatus) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/teacher/appointments/${appointmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('teacher_token')}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Table ko turant refresh karein taaki updated status dikhe
+            fetchTeacherAppointmentsList();
+        } else {
+            alert(data.detail || "Failed to update status");
+        }
+    } catch (error) {
+        console.error("Error updating status:", error);
+        alert("Failed to connect to server.");
+    }
+}
