@@ -10,6 +10,7 @@ from app.models import request as request_model
 from app.models import teacher as teacher_model
 from app.models import department as department_model
 from app.models.appointment import Appointment as student_appointment
+import os
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
@@ -21,12 +22,14 @@ app = FastAPI(
 )
 
 # --- 1. MIDDLEWARE ---
+
+origins = os.getenv(
+    "CORS_ORIGINS", "http://localhost:8000,http://127.0.0.1:8000"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8000", 
-        "http://127.0.0.1:8000"
-    ],  # EXACT frontend URLs (Live Server ports)
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
