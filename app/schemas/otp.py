@@ -1,4 +1,5 @@
-from pydantic import field_validator, BaseModel
+from pydantic import field_validator, BaseModel, EmailStr
+from app.schemas.teacher import TeacherCreate
 import re
 
 
@@ -21,3 +22,17 @@ class StudentSignupWithOTP(OTPRequest):
     name: str
     roll_no: str
     password: str
+
+
+# ==========================================
+# TEACHER SPECIFIC SCHEMAS (Independent)
+# ==========================================
+
+# 1. Schema for Teacher OTP Request (No domain restriction for now)
+class TeacherOTPRequest(BaseModel):
+    email: EmailStr
+
+
+# 2. Schema for Teacher Signup (Inherits from your existing TeacherCreate)
+class TeacherSignupWithOTP(TeacherCreate):
+    otp: str

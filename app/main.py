@@ -12,8 +12,11 @@ from app.models import department as department_model
 from app.models.appointment import Appointment as student_appointment
 import os
 
+
 # Create all database tables
 Base.metadata.create_all(bind=engine)
+
+
 
 # Initilize the fastapi app
 app = FastAPI(

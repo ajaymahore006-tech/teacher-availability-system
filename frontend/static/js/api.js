@@ -82,15 +82,15 @@ function openSignupModal() {
         `;
     } else if (role === "teacher") {
         dynamicFieldContainer.innerHTML = `
-            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Department</label>
-            <select id="dynamic-input" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: white;">
-                <option value="" disabled selected>Select your department</option>
-                <option value="Computer Science">Computer Science</option>
-                <option value="Information Technology">Information Technology</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Mathematics">Mathematics</option>
-            </select>
-        `;
+        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Department</label>
+        <select id="dynamic-input" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: white;">
+            <option value="" disabled selected>Select your department</option>
+            <option value="1">Computer Science</option>
+            <option value="2">Information Technology</option>
+            <option value="3">Electronics</option>
+            <option value="4">Mathematics</option>
+        </select>
+    `;
     }
 }
 
@@ -249,6 +249,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 messageBox.style.background = "#ffe6e6";
                 messageBox.style.color = "#d9534f";
                 messageBox.textContent = error.message;
+            } finally {
+                // Always reset the button, whether success, failure, or network error
                 btn.textContent = "Send OTP Verification";
                 btn.disabled = false;
             }
@@ -271,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (role === "student") {
                 payload.roll_no = document.getElementById("dynamic-input").value;
             } else {
-                payload.department = document.getElementById("dynamic-input").value;
+                payload.department_id = parseInt(document.getElementById("dynamic-input").value);
             }
 
             try {
@@ -344,6 +346,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 forgotMessage.style.background = "#ffe6e6";
                 forgotMessage.style.color = "#d9534f";
                 forgotMessage.textContent = error.message;
+            } finally {
+                // Always reset the button, whether success, failure, or network error
                 btn.textContent = "Send Recovery OTP";
                 btn.disabled = false;
             }

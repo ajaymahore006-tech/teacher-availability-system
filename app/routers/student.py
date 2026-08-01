@@ -110,9 +110,9 @@ def register_student(request: StudentSignupWithOTP, db: Session = Depends(get_db
     # ==========================================
     # Note: "sub" is usually the email or username
     access_token = create_access_token(
-        data={"sub": new_student.email, "role": "student"} 
+        data={"sub": new_student.email, "role": "student"}
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -213,6 +213,8 @@ def reset_password(request: StudentPasswordReset, db: Session = Depends(get_db))
 
 
 from app.utils.security import get_current_user_email  # Add this to your imports
+
+
 @router.get("/dashboard")
 def student_dashboard(current_email: str = Depends(get_current_user_email)):
     return {
@@ -223,34 +225,40 @@ def student_dashboard(current_email: str = Depends(get_current_user_email)):
 
 
 from app.models.appointment import Appointment
-from app.schemas.appointment import AppointmentCreate 
-from app.utils.security import get_current_student # Import the new bouncer
+from app.schemas.appointment import AppointmentCreate
+from app.utils.security import get_current_student  # Import the new bouncer
+
+
 @router.post("/book-appointment")
 def book_appointment(
-    appointment_data: AppointmentCreate, 
+    appointment_data: AppointmentCreate,
     db: Session = Depends(get_db),
-    current_student: Student = Depends(get_current_student) # The Bouncer!
+    current_student: Student = Depends(get_current_student),  # The Bouncer!
 ):
     # 1. Create the new appointment record
     new_appointment = Appointment(
-        student_email=current_student.email, # Securely fetched from token!
+        student_email=current_student.email,  # Securely fetched from token!
         teacher_id=appointment_data.teacher_id,
         purpose=appointment_data.purpose,
-        status="Pending"
+        status="Pending",
     )
-    
+
     # 2. Save it to the database
     db.add(new_appointment)
     db.commit()
     db.refresh(new_appointment)
-    
-    return {"message": "Appointment requested successfully!", "appointment_id": new_appointment.id}
+
+    return {
+        "message": "Appointment requested successfully!",
+        "appointment_id": new_appointment.id,
+    }
 
 
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import os
 from dotenv import load_dotenv
+
 # This tells FastAPI where to look for the token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/student/login")
 
@@ -261,21 +269,32 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
+
 @router.get("/profile")
-def get_student_profile(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_student_profile(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+):
     # 1. Decode the token to get the user's email
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials",
+            )
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
-    
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+        )
+
     # 2. Fetch the student from the database
     student = db.query(Student).filter(Student.email == email).first()
     if not student:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
-        
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Student not found"
+        )
+
     # 3. Return the student details (FastAPI will automatically convert this to JSON)
     return student
