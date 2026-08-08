@@ -1,10 +1,12 @@
+# PLACE AT: app/utils/security.py  (REPLACES your existing file)
+
 import os
+import secrets
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 import jwt
 
 # 1. Configuration variables
-# We grab existing secret key from the .env file
 SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key_for_teacher_availability_app")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Token expires in 1 hour
@@ -26,22 +28,21 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # 5. Function to generate the JWT "VIP Wristband"
 def create_access_token(data: dict):
     to_encode = data.copy()
-
-    # Set the expiration time
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-
-    # Generate the token using your secret key and the algorithm
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
     return encoded_jwt
+
+
+# 6. NEW: generate a secure one-time setup token (for teacher "set password" links)
+def generate_setup_token() -> str:
+    return secrets.token_urlsafe(32)
 
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError  # Make sure you have these imported!
+from jose import jwt as jose_jwt, JWTError
 
-# This tells FastAPI where the login route is
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/student/login")
 
 
@@ -53,8 +54,7 @@ def get_current_user_email(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        # We unlock the token using your SECRET_KEY
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jose_jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -68,28 +68,23 @@ from app.database import get_db
 from app.models.teacher import Teacher
 
 
-# This new guard checks if the token belongs to a TEACHER
-def get_current_teacher(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
-):
+# This guard checks if the token belongs to a TEACHER
+def get_current_teacher(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authorized as a teacher",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        # Decode the token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jose_jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        role: str = payload.get("role")  # We look for the "role" we saved during login
+        role: str = payload.get("role")
 
         if email is None or role != "teacher":
             raise credentials_exception
-
     except JWTError:
         raise credentials_exception
 
-    # Find the teacher in the database
     teacher = db.query(Teacher).filter(Teacher.email == email).first()
     if teacher is None:
         raise credentials_exception
@@ -97,30 +92,50 @@ def get_current_teacher(
     return teacher
 
 
+# NEW: This guard checks if the token belongs to a teacher who is ALSO an admin.
+# We re-check is_admin against the DB (not just the token) so a demoted admin
+# is locked out immediately, without waiting for their token to expire.
+def get_current_admin(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Admin access required",
+    )
+    try:
+        payload = jose_jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        role: str = payload.get("role")
+
+        if email is None or role != "teacher":
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    teacher = db.query(Teacher).filter(Teacher.email == email).first()
+    if teacher is None or not teacher.is_admin:
+        raise credentials_exception
+
+    return teacher
+
+
 from app.models.student import Student
 
-def get_current_student(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
-):
+
+def get_current_student(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate student credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        # Decode the JWT token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jose_jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         role: str = payload.get("role")
 
-        # Verify it's actually a student token
         if email is None or role != "student":
             raise credentials_exception
-
     except JWTError:
         raise credentials_exception
 
-    # Fetch student from DB
     student = db.query(Student).filter(Student.email == email).first()
     if student is None:
         raise credentials_exception

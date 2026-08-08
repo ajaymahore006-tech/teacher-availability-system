@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./app
+    container_name: dfa-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST
+      - DB_PORT
+      - DB_USER
+      - DB_PASSWORD
+      - DB_NAME
+      - SECRET_KEY
+      - EMAIL_SENDER
+      - EMAIL_PASSWORD
+      - ADMIN_BOOTSTRAP_EMAIL
+      - ADMIN_NOTIFY_EMAILS
+      - FRONTEND_URL
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: dfa-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules

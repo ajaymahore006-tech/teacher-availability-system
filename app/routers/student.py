@@ -1,38 +1,42 @@
+# PLACE AT: app/routers/student.py  (REPLACES your existing file)
+
+import re
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.student import Student
 from app.schemas.student import StudentLogin, StudentResponse, StudentPasswordReset
-from app.utils.security import verify_password, create_access_token, get_password_hash
+from app.utils.security import (
+    verify_password,
+    create_access_token,
+    get_password_hash,
+    get_current_user_email,
+    get_current_student,
+)
 from app.utils.email_sender import send_otp_email
 import random
 from datetime import datetime, timedelta
 from app.schemas.otp import OTPRequest, StudentSignupWithOTP
 from app.models.otp import OTPCode
 
-# Initialize the router
 router = APIRouter(prefix="/api/student", tags=["Student Authentication"])
 
 
 @router.post("/send-otp")
 def send_registration_otp(request: OTPRequest, db: Session = Depends(get_db)):
-    # 1. Check if the student is already fully registered
     existing_student = db.query(Student).filter(Student.email == request.email).first()
     if existing_student:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="An account with this email already exists.",
         )
-    # 2. Generate a random 6-digit OTP and set expiration (10 minutes)
+
     otp_code = str(random.randint(100000, 999999))
     expiration_time = datetime.now() + timedelta(minutes=10)
 
-    # 3. Save to the temporary otp_codes table
-    # If they requested an OTP before but didn't use it, we just update the old one
     existing_otp_record = (
         db.query(OTPCode).filter(OTPCode.email == request.email).first()
     )
-
     if existing_otp_record:
         existing_otp_record.otp = otp_code
         existing_otp_record.expires_at = expiration_time
@@ -44,9 +48,7 @@ def send_registration_otp(request: OTPRequest, db: Session = Depends(get_db)):
 
     db.commit()
 
-    # 4. Trigger the email utility function
     email_sent = send_otp_email(request.email, otp_code)
-
     if not email_sent:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -58,70 +60,66 @@ def send_registration_otp(request: OTPRequest, db: Session = Depends(get_db)):
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def register_student(request: StudentSignupWithOTP, db: Session = Depends(get_db)):
-    # 1. Fetch the OTP record for this email
     otp_record = db.query(OTPCode).filter(OTPCode.email == request.email).first()
 
-    # 2. Verify the OTP exists and matches
     if not otp_record:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No OTP requested for this email.",
         )
-
     if otp_record.otp != request.otp:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP code."
         )
-
-    # 3. Check if the OTP has expired
     if otp_record.expires_at < datetime.now():
-        db.delete(otp_record)  # Clean up the expired code
+        db.delete(otp_record)
         db.commit()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="OTP has expired. Please request a new one.",
         )
 
-    # 4. Check if the roll number is already taken
-    existing_roll = db.query(Student).filter(Student.roll_no == request.roll_no).first()
+    # NEW: Derive the MIS/roll number from the email itself (e.g. "1124115120@cse.iiitp.ac.in" -> 1124115120)
+    # We do this server-side (not trusting any client-supplied value) since the email
+    # was already validated against the college domain pattern by the OTPRequest schema.
+    match = re.match(r"^(\d+)@", request.email)
+    if not match:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Could not extract MIS number from email.",
+        )
+    derived_roll_no = int(match.group(1))
+
+    existing_roll = db.query(Student).filter(Student.roll_no == derived_roll_no).first()
     if existing_roll:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This roll number is already registered.",
         )
 
-    # 5. Hash the password and create the student
     hashed_password = get_password_hash(request.password)
     new_student = Student(
         email=request.email,
         password=hashed_password,
         name=request.name,
-        roll_no=request.roll_no,
+        roll_no=derived_roll_no,
     )
 
-    # 6. Save the student and delete the used OTP
     db.add(new_student)
     db.delete(otp_record)
     db.commit()
     db.refresh(new_student)
 
-    # ==========================================
-    # 7. AUTO-LOGIN MAGIC (Generate & Return Token)
-    # ==========================================
-    # Note: "sub" is usually the email or username
     access_token = create_access_token(
         data={"sub": new_student.email, "role": "student"}
     )
-
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/login")
 def login_student(credentials: StudentLogin, db: Session = Depends(get_db)):
-    # 1. Search the database for the student's email
     student = db.query(Student).filter(Student.email == credentials.email).first()
 
-    # 2. Verify the student exists AND the password is correct
     if not student or not verify_password(credentials.password, student.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -129,9 +127,7 @@ def login_student(credentials: StudentLogin, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 3. Generate the JWT (The "VIP Wristband")
     access_token = create_access_token(data={"sub": student.email, "role": "student"})
-
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -141,7 +137,6 @@ def login_student(credentials: StudentLogin, db: Session = Depends(get_db)):
 
 @router.post("/forgot-password")
 def forgot_password(request: OTPRequest, db: Session = Depends(get_db)):
-    # 1. Check if the student actually exists in our system
     student = db.query(Student).filter(Student.email == request.email).first()
     if not student:
         raise HTTPException(
@@ -149,11 +144,9 @@ def forgot_password(request: OTPRequest, db: Session = Depends(get_db)):
             detail="Account with this email does not exist.",
         )
 
-    # 2. Generate the OTP and set a 10-minute expiration
     otp_code = str(random.randint(100000, 999999))
     expiration_time = datetime.now() + timedelta(minutes=10)
 
-    # 3. Save to the temporary otp_codes table (UPSERT logic)
     existing_otp_record = (
         db.query(OTPCode).filter(OTPCode.email == request.email).first()
     )
@@ -168,7 +161,6 @@ def forgot_password(request: OTPRequest, db: Session = Depends(get_db)):
 
     db.commit()
 
-    # 4. Trigger the email utility function
     email_sent = send_otp_email(request.email, otp_code)
     if not email_sent:
         raise HTTPException(
@@ -183,11 +175,9 @@ def forgot_password(request: OTPRequest, db: Session = Depends(get_db)):
 
 @router.post("/reset-password")
 def reset_password(request: StudentPasswordReset, db: Session = Depends(get_db)):
-    # 1. Fetch the OTP record and the Student record
     otp_record = db.query(OTPCode).filter(OTPCode.email == request.email).first()
     student = db.query(Student).filter(Student.email == request.email).first()
 
-    # 2. Verify everything is valid
     if not student:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Student not found."
@@ -203,16 +193,11 @@ def reset_password(request: StudentPasswordReset, db: Session = Depends(get_db))
             status_code=status.HTTP_400_BAD_REQUEST, detail="OTP has expired."
         )
 
-    # 3. Hash the new password and update the database
-    # We hash the new password, update the database, and delete the used OTP[cite: 539].
     student.password = get_password_hash(request.new_password)
     db.delete(otp_record)
     db.commit()
 
     return {"message": "Password has been reset successfully. You can now log in."}
-
-
-from app.utils.security import get_current_user_email  # Add this to your imports
 
 
 @router.get("/dashboard")
@@ -226,24 +211,20 @@ def student_dashboard(current_email: str = Depends(get_current_user_email)):
 
 from app.models.appointment import Appointment
 from app.schemas.appointment import AppointmentCreate
-from app.utils.security import get_current_student  # Import the new bouncer
 
 
 @router.post("/book-appointment")
 def book_appointment(
     appointment_data: AppointmentCreate,
     db: Session = Depends(get_db),
-    current_student: Student = Depends(get_current_student),  # The Bouncer!
+    current_student: Student = Depends(get_current_student),
 ):
-    # 1. Create the new appointment record
     new_appointment = Appointment(
-        student_email=current_student.email,  # Securely fetched from token!
+        student_email=current_student.email,
         teacher_id=appointment_data.teacher_id,
         purpose=appointment_data.purpose,
         status="Pending",
     )
-
-    # 2. Save it to the database
     db.add(new_appointment)
     db.commit()
     db.refresh(new_appointment)
@@ -254,47 +235,6 @@ def book_appointment(
     }
 
 
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-import os
-from dotenv import load_dotenv
-
-# This tells FastAPI where to look for the token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/student/login")
-
-# 1. This tells Python to find the .env file and load the variables
-load_dotenv()
-
-# 2. Now we grab the key safely from the "os" module
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = "HS256"
-
-
-@router.get("/profile")
-def get_student_profile(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
-):
-    # 1. Decode the token to get the user's email
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials",
-            )
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-        )
-
-    # 2. Fetch the student from the database
-    student = db.query(Student).filter(Student.email == email).first()
-    if not student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Student not found"
-        )
-
-    # 3. Return the student details (FastAPI will automatically convert this to JSON)
-    return student
+@router.get("/profile", response_model=StudentResponse)
+def get_student_profile(current_student: Student = Depends(get_current_student)):
+    return current_student
