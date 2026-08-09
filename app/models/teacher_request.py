@@ -13,6 +13,7 @@ class TeacherAccessRequest(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(191), nullable=False, index=True)
     department_id = Column(Integer, nullable=True)
+    staff_type = Column(String(50), default="Teaching", nullable=False)
     message = Column(Text, nullable=True)  # optional note from the teacher
 
     # Pending -> Approved -> (Teacher row created, invite sent)

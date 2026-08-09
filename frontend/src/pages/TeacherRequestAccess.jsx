@@ -19,6 +19,7 @@ const TeacherRequestAccess = () => {
     name: "",
     email: location.state?.email || "",
     department_id: "",
+    staff_type: "Teaching",
     message: "",
   });
   const [error, setError] = useState("");

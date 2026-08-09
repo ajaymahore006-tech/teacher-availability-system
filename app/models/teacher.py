@@ -18,6 +18,7 @@ class Teacher(Base):
 
     status = Column(String(50), default='Not Available')
     email = Column(String(191), unique=True, index=True)
+    staff_type = Column(String(50), default="Teaching", nullable=False)
 
     # Foreign key linking to departments (already nullable — fine for admin-only accounts)
     department_id = Column(Integer, ForeignKey('departments.id', ondelete='CASCADE'), nullable=True)

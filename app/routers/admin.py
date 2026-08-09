@@ -75,6 +75,7 @@ def approve_request(request_id: int, db: Session = Depends(get_db), admin: Teach
         password=None,  # NOT set yet — teacher sets it via the emailed link
         setup_token=setup_token,
         setup_token_expires=datetime.utcnow() + timedelta(hours=24),
+        staff_type=req.staff_type,
     )
     db.add(new_teacher)
 
@@ -132,6 +133,7 @@ def create_teacher_directly(
         password=None,
         setup_token=setup_token,
         setup_token_expires=datetime.utcnow() + timedelta(hours=24),
+        staff_type=payload.staff_type,
     )
     db.add(new_teacher)
     db.commit()

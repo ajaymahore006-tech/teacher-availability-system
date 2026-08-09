@@ -96,6 +96,7 @@ def request_teacher_access(request: TeacherAccessRequestCreate, db: Session = De
         email=request.email,
         department_id=request.department_id,
         message=request.message,
+        staff_type=request.staff_type,
     )
     db.add(new_request)
     db.commit()

@@ -30,6 +30,16 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState("");
 
+  // NEW: filter state for Manage Teachers tab
+  const [staffTypeFilter, setStaffTypeFilter] = useState("All");
+  const [departmentFilter, setDepartmentFilter] = useState("All");
+
+  const filteredTeachers = teachers.filter((t) => {
+    const staffMatch = staffTypeFilter === "All" || t.staff_type === staffTypeFilter;
+    const deptMatch = departmentFilter === "All" || String(t.department_id) === departmentFilter;
+    return staffMatch && deptMatch;
+  });
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -183,18 +193,43 @@ const AdminPanel = () => {
             ))}
           </div>
         ) : (
+          <div>
+            {/* NEW: Filter bar */}
+            <div className="flex flex-wrap gap-3 mb-4">
+              <select
+                value={staffTypeFilter}
+                onChange={(e) => setStaffTypeFilter(e.target.value)}
+                className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="All">All Staff Types</option>
+                <option value="Teaching">Teaching Staff</option>
+                <option value="Non-Teaching">Non-Teaching Staff</option>
+              </select>
+
+              <select
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="All">All Departments</option>
+                <option value="1">CSE</option>
+                <option value="2">ECE</option>
+              </select>
+            </div>
+
           <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b text-left text-gray-500">
                 <tr>
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Staff Type</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {teachers.map((t) => (
+                {filteredTeachers.map((t) => (
                   <tr key={t.id} className="border-b last:border-0">
                     <td className="px-4 py-3 font-medium text-slate-800">
                       <div className="flex items-center gap-2">
@@ -207,6 +242,13 @@ const AdminPanel = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-500">{t.email}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        t.staff_type === "Teaching" ? "bg-indigo-50 text-indigo-700" : "bg-gray-100 text-gray-600"
+                      }`}>
+                        {t.staff_type}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-gray-500">{t.status}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
@@ -240,6 +282,7 @@ const AdminPanel = () => {
                 ))}
               </tbody>
             </table>
+          </div>
           </div>
         )}
       </main>

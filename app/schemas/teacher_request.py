@@ -10,6 +10,7 @@ class TeacherAccessRequestCreate(BaseModel):
     email: EmailStr
     department_id: int
     message: Optional[str] = None
+    staff_type: str = "Teaching"   
 
 
 class TeacherAccessRequestResponse(BaseModel):
@@ -20,6 +21,7 @@ class TeacherAccessRequestResponse(BaseModel):
     message: Optional[str]
     status: str
     created_at: datetime
+    staff_type: str
 
     class Config:
         from_attributes = True
