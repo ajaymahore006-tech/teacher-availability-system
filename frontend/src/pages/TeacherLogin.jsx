@@ -57,11 +57,13 @@ const TeacherLogin = () => {
         </div>
       )}
 
-      <form className="space-y-5" onSubmit={handleLogin}>
+      <form className="space-y-5" onSubmit={handleLogin} autoComplete="off">
         <div>
           <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">EMAIL ADDRESS</label>
           <input
             type="email"
+            name="teacher-email"
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -75,6 +77,8 @@ const TeacherLogin = () => {
           <div className="relative mt-2">
             <input
               type={showPassword ? "text" : "password"}
+              name="teacher-password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}

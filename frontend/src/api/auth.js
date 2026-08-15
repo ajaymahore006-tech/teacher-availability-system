@@ -20,6 +20,9 @@ export const studentResetPassword = (payload) =>
 
 export const studentProfile = () => client.get("/api/student/profile");
 
+export const studentBookAppointment = (teacher_id, purpose) =>
+  client.post("/api/student/book-appointment", { teacher_id, purpose });
+
 // ===================== TEACHER =====================
 export const teacherLogin = (email, password) =>
   client.post("/api/teacher/login", { email, password });

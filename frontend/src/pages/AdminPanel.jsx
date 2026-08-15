@@ -1,8 +1,8 @@
-// PLACE AT: src/pages/AdminPanel.jsx  (NEW FILE)
+// PLACE AT: src/pages/AdminPanel.jsx  (REPLACES your existing file)
 
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { LogOut, Check, X, Trash2, ShieldPlus, ShieldMinus, Users, Inbox, ShieldCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { LogOut, Check, X, Trash2, ShieldPlus, ShieldMinus, ArrowUpRight } from "lucide-react";
 import {
   adminListRequests,
   adminApproveRequest,
@@ -14,25 +14,21 @@ import {
 } from "../api/auth";
 import { clearSession } from "../api/session";
 
-// Matches your departments table — keep this in sync with TeacherRequestAccess.jsx
-const DEPARTMENTS = {
-  1: "Computer Science Engineering (CSE)",
-  2: "Electronics & Communication Engineering (ECE)",
-};
+const DEPARTMENTS = { 1: "Computer Science Engineering (CSE)", 2: "Electronics & Communication Engineering (ECE)" };
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { requestId } = useParams(); // supports the /admin/requests/:requestId deep link from emails
-
-  const [tab, setTab] = useState(requestId ? "requests" : "requests");
+  const [tab, setTab] = useState("requests");
   const [requests, setRequests] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState("");
 
-  // NEW: filter state for Manage Teachers tab
   const [staffTypeFilter, setStaffTypeFilter] = useState("All");
   const [departmentFilter, setDepartmentFilter] = useState("All");
+
+  // NEW: which teacher's detail panel is open. null = closed.
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
 
   const filteredTeachers = teachers.filter((t) => {
     const staffMatch = staffTypeFilter === "All" || t.staff_type === staffTypeFilter;
@@ -43,10 +39,7 @@ const AdminPanel = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [reqRes, teacherRes] = await Promise.all([
-        adminListRequests("Pending"),
-        adminListTeachers(),
-      ]);
+      const [reqRes, teacherRes] = await Promise.all([adminListRequests("Pending"), adminListTeachers()]);
       setRequests(reqRes.data);
       setTeachers(teacherRes.data);
     } catch (err) {
@@ -61,51 +54,26 @@ const AdminPanel = () => {
   }, []);
 
   const handleApprove = async (id) => {
-    try {
-      await adminApproveRequest(id);
-      setActionMsg("Request approved. Teacher account created and setup email sent.");
-      loadData();
-    } catch (err) {
-      setActionMsg(err.response?.data?.detail || "Failed to approve.");
-    }
+    await adminApproveRequest(id).catch((e) => setActionMsg(e.response?.data?.detail || "Failed to approve."));
+    loadData();
   };
-
   const handleReject = async (id) => {
-    try {
-      await adminRejectRequest(id);
-      setActionMsg("Request rejected.");
-      loadData();
-    } catch (err) {
-      setActionMsg(err.response?.data?.detail || "Failed to reject.");
-    }
+    await adminRejectRequest(id).catch((e) => setActionMsg(e.response?.data?.detail || "Failed to reject."));
+    loadData();
   };
-
   const handleDelete = async (id) => {
     if (!window.confirm("Remove this teacher account? This cannot be undone.")) return;
-    try {
-      await adminDeleteTeacher(id);
-      loadData();
-    } catch (err) {
-      setActionMsg(err.response?.data?.detail || "Failed to delete.");
-    }
+    await adminDeleteTeacher(id).catch((e) => setActionMsg(e.response?.data?.detail || "Failed to delete."));
+    setSelectedTeacher(null);
+    loadData();
   };
-
   const handlePromote = async (id) => {
-    try {
-      await adminPromoteTeacher(id);
-      loadData();
-    } catch (err) {
-      setActionMsg(err.response?.data?.detail || "Failed to promote.");
-    }
+    await adminPromoteTeacher(id).catch((e) => setActionMsg(e.response?.data?.detail || "Failed to promote."));
+    loadData();
   };
-
   const handleDemote = async (id) => {
-    try {
-      await adminDemoteTeacher(id);
-      loadData();
-    } catch (err) {
-      setActionMsg(err.response?.data?.detail || "Failed to demote.");
-    }
+    await adminDemoteTeacher(id).catch((e) => setActionMsg(e.response?.data?.detail || "Failed to demote."));
+    loadData();
   };
 
   const handleLogout = () => {
@@ -114,79 +82,68 @@ const AdminPanel = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* NAVBAR */}
-      <header className="bg-white shadow-sm border-b px-6 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-bold text-slate-900">DFA Admin Panel</h1>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700"
-        >
-          <LogOut className="w-4 h-4" /> Logout
+    <div className="min-h-screen bg-[#F9FFFD] text-[#0E1B1E]">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+        .font-display { font-family: 'Archivo Black', sans-serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Space Mono', monospace; }
+      `}</style>
+
+      {/* TOP BAR */}
+      <header className="sticky top-0 z-40 bg-[#F9FFFD]/90 backdrop-blur-sm border-b border-[#0E1B1E]/10 px-5 sm:px-8 py-4 flex items-center justify-between">
+        <h1 className="font-display uppercase text-lg">Admin Panel</h1>
+        <button onClick={handleLogout} className="flex items-center gap-2 font-mono text-xs tracking-widest text-[#F43493] hover:opacity-70">
+          <LogOut className="w-4 h-4" /> LOGOUT
         </button>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-5 sm:px-8 py-8">
         {actionMsg && (
-          <div className="mb-5 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-lg p-3">
-            {actionMsg}
-          </div>
+          <div className="mb-5 font-body text-sm bg-[#6BCFE0]/20 border border-[#6BCFE0] px-4 py-3">{actionMsg}</div>
         )}
 
         {/* TABS */}
-        <div className="flex gap-2 mb-6 border-b">
+        <div className="flex gap-8 mb-8 border-b border-[#0E1B1E]/10">
           <button
             onClick={() => setTab("requests")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
-              tab === "requests" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
+            className={`font-mono text-xs tracking-widest pb-3 border-b-2 transition-colors ${
+              tab === "requests" ? "border-[#F43493] text-[#0E1B1E]" : "border-transparent text-[#0E1B1E]/40"
             }`}
           >
-            <Inbox className="w-4 h-4" /> Pending Requests ({requests.length})
+            PENDING REQUESTS ({requests.length})
           </button>
           <button
             onClick={() => setTab("teachers")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
-              tab === "teachers" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-800"
+            className={`font-mono text-xs tracking-widest pb-3 border-b-2 transition-colors ${
+              tab === "teachers" ? "border-[#F43493] text-[#0E1B1E]" : "border-transparent text-[#0E1B1E]/40"
             }`}
           >
-            <Users className="w-4 h-4" /> Manage Teachers ({teachers.length})
+            MANAGE TEACHERS ({teachers.length})
           </button>
         </div>
 
         {loading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
+          <p className="font-mono text-sm text-[#0E1B1E]/50">LOADING...</p>
         ) : tab === "requests" ? (
-          <div className="space-y-4">
-            {requests.length === 0 && (
-              <p className="text-gray-500 text-sm">No pending requests right now.</p>
-            )}
+          <div className="space-y-3">
+            {requests.length === 0 && <p className="font-body text-sm text-[#0E1B1E]/50">No pending requests right now.</p>}
             {requests.map((r) => (
-              <div
-                key={r.id}
-                className={`bg-white border rounded-xl p-5 shadow-sm flex items-center justify-between ${
-                  requestId && parseInt(requestId, 10) === r.id ? "ring-2 ring-blue-400" : ""
-                }`}
-              >
+              <div key={r.id} className="border border-[#0E1B1E]/10 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-semibold text-slate-900">{r.name}</h3>
-                  <p className="text-sm text-gray-500">{r.email}</p>
-                  <p className="text-xs text-blue-600 font-medium mt-1">
-                    {DEPARTMENTS[r.department_id] || `Department ID: ${r.department_id}`}
+                  <h3 className="font-display uppercase text-base">{r.name}</h3>
+                  <p className="font-body text-sm text-[#0E1B1E]/60">{r.email}</p>
+                  <p className="font-mono text-xs text-[#A05341] mt-1">
+                    {DEPARTMENTS[r.department_id] || `DEPT ${r.department_id}`} · {r.staff_type?.toUpperCase()}
                   </p>
-                  {r.message && <p className="text-xs text-gray-400 mt-1 italic">"{r.message}"</p>}
+                  {r.message && <p className="font-body text-xs text-[#0E1B1E]/40 mt-1 italic">"{r.message}"</p>}
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleApprove(r.id)}
-                    className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
-                  >
-                    <Check className="w-4 h-4" /> Approve
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => handleApprove(r.id)} className="flex items-center gap-1 bg-[#0E1B1E] text-white font-mono text-xs tracking-widest px-4 py-2.5 hover:bg-[#0E1B1E]/85">
+                    <Check className="w-3.5 h-3.5" /> APPROVE
                   </button>
-                  <button
-                    onClick={() => handleReject(r.id)}
-                    className="flex items-center gap-1 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium px-3 py-2 rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4" /> Reject
+                  <button onClick={() => handleReject(r.id)} className="flex items-center gap-1 border border-[#F43493] text-[#F43493] font-mono text-xs tracking-widest px-4 py-2.5 hover:bg-[#F43493]/10">
+                    <X className="w-3.5 h-3.5" /> REJECT
                   </button>
                 </div>
               </div>
@@ -194,98 +151,111 @@ const AdminPanel = () => {
           </div>
         ) : (
           <div>
-            {/* NEW: Filter bar */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              <select
-                value={staffTypeFilter}
-                onChange={(e) => setStaffTypeFilter(e.target.value)}
-                className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="All">All Staff Types</option>
-                <option value="Teaching">Teaching Staff</option>
-                <option value="Non-Teaching">Non-Teaching Staff</option>
+            <div className="flex flex-wrap gap-3 mb-5">
+              <select value={staffTypeFilter} onChange={(e) => setStaffTypeFilter(e.target.value)} className="font-mono text-xs border border-[#0E1B1E]/20 px-3 py-2 bg-transparent">
+                <option value="All">ALL STAFF TYPES</option>
+                <option value="Teaching">TEACHING</option>
+                <option value="Non-Teaching">NON-TEACHING</option>
               </select>
-
-              <select
-                value={departmentFilter}
-                onChange={(e) => setDepartmentFilter(e.target.value)}
-                className="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="All">All Departments</option>
+              <select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)} className="font-mono text-xs border border-[#0E1B1E]/20 px-3 py-2 bg-transparent">
+                <option value="All">ALL DEPARTMENTS</option>
                 <option value="1">CSE</option>
                 <option value="2">ECE</option>
               </select>
             </div>
 
-          <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b text-left text-gray-500">
-                <tr>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Staff Type</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTeachers.map((t) => (
-                  <tr key={t.id} className="border-b last:border-0">
-                    <td className="px-4 py-3 font-medium text-slate-800">
-                      <div className="flex items-center gap-2">
-                        {t.name}
-                        {t.is_admin && (
-                          <span className="flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-                            <ShieldCheck className="w-3 h-3" /> Admin
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">{t.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                        t.staff_type === "Teaching" ? "bg-indigo-50 text-indigo-700" : "bg-gray-100 text-gray-600"
-                      }`}>
-                        {t.staff_type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">{t.status}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-center gap-2">
-                        {t.is_admin ? (
-                          <button
-                            onClick={() => handleDemote(t.id)}
-                            title="Demote from admin"
-                            className="text-amber-600 hover:text-amber-800"
-                          >
-                            <ShieldMinus className="w-4 h-4" />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handlePromote(t.id)}
-                            title="Promote to admin"
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <ShieldPlus className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(t.id)}
-                          title="Remove teacher"
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            {/* Clickable rows — same list works for mobile and desktop, just simpler columns than before */}
+            <div className="border border-[#0E1B1E]/10">
+              {filteredTeachers.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setSelectedTeacher(t)}
+                  className="w-full flex items-center justify-between px-5 py-4 border-b border-[#0E1B1E]/10 last:border-0 hover:bg-[#6BCFE0]/10 text-left transition-colors"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-display uppercase text-sm">{t.name}</span>
+                      {t.is_admin && <span className="font-mono text-[10px] bg-[#0E1B1E] text-white px-1.5 py-0.5">ADMIN</span>}
+                    </div>
+                    <p className="font-body text-xs text-[#0E1B1E]/50">{t.email}</p>
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-[#0E1B1E]/30 flex-shrink-0" />
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </main>
+
+      {/* SLIDE-OVER DETAIL PANEL — only renders when selectedTeacher is not null */}
+      {selectedTeacher && (
+        <>
+          {/* backdrop — clicking it closes the panel */}
+          <div className="fixed inset-0 bg-[#0E1B1E]/40 z-40" onClick={() => setSelectedTeacher(null)} />
+
+          <div className="fixed top-0 right-0 h-full w-full sm:w-96 bg-[#F9FFFD] z-50 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#0E1B1E]/10">
+              <span className="font-mono text-xs tracking-widest text-[#0E1B1E]/50">TEACHER DETAILS</span>
+              <button onClick={() => setSelectedTeacher(null)} className="text-[#0E1B1E]/50 hover:text-[#0E1B1E]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 flex-1 overflow-y-auto">
+              <h2 className="font-display uppercase text-2xl mb-1">{selectedTeacher.name}</h2>
+              <p className="font-body text-sm text-[#0E1B1E]/60 mb-6">{selectedTeacher.email}</p>
+
+              <div className="space-y-4 font-body text-sm">
+                <div className="flex justify-between border-b border-[#0E1B1E]/10 pb-3">
+                  <span className="text-[#0E1B1E]/50">Teacher ID</span>
+                  <span className="font-mono">{selectedTeacher.id}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#0E1B1E]/10 pb-3">
+                  <span className="text-[#0E1B1E]/50">Department</span>
+                  <span>{DEPARTMENTS[selectedTeacher.department_id] || "—"}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#0E1B1E]/10 pb-3">
+                  <span className="text-[#0E1B1E]/50">Staff Type</span>
+                  <span>{selectedTeacher.staff_type}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#0E1B1E]/10 pb-3">
+                  <span className="text-[#0E1B1E]/50">Status</span>
+                  <span>{selectedTeacher.status}</span>
+                </div>
+                <div className="flex justify-between border-b border-[#0E1B1E]/10 pb-3">
+                  <span className="text-[#0E1B1E]/50">Admin Access</span>
+                  <span>{selectedTeacher.is_admin ? "Yes" : "No"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-6 border-t border-[#0E1B1E]/10 space-y-2">
+              {selectedTeacher.is_admin ? (
+                <button
+                  onClick={() => { handleDemote(selectedTeacher.id); setSelectedTeacher(null); }}
+                  className="w-full flex items-center justify-center gap-2 border border-[#A05341] text-[#A05341] font-mono text-xs tracking-widest py-3 hover:bg-[#A05341]/10"
+                >
+                  <ShieldMinus className="w-4 h-4" /> REMOVE ADMIN ACCESS
+                </button>
+              ) : (
+                <button
+                  onClick={() => { handlePromote(selectedTeacher.id); setSelectedTeacher(null); }}
+                  className="w-full flex items-center justify-center gap-2 border border-[#0E1B1E] text-[#0E1B1E] font-mono text-xs tracking-widest py-3 hover:bg-[#0E1B1E]/5"
+                >
+                  <ShieldPlus className="w-4 h-4" /> GRANT ADMIN ACCESS
+                </button>
+              )}
+              <button
+                onClick={() => handleDelete(selectedTeacher.id)}
+                className="w-full flex items-center justify-center gap-2 bg-[#F43493] text-white font-mono text-xs tracking-widest py-3 hover:bg-[#e02384]"
+              >
+                <Trash2 className="w-4 h-4" /> REMOVE TEACHER
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
