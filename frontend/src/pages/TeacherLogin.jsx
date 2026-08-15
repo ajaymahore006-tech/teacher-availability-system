@@ -1,15 +1,17 @@
-// PLACE AT: src/pages/TeacherLogin.jsx  (NEW FILE)
+// PLACE AT: src/pages/TeacherLogin.jsx  (REPLACES your existing file)
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Lock, Mail, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { teacherLogin } from "../api/auth";
 import { saveSession } from "../api/session";
+import AuthShell from "../components/AuthShell";
 
 const TeacherLogin = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [showRequestPrompt, setShowRequestPrompt] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,134 +21,98 @@ const TeacherLogin = () => {
     setError("");
     setShowRequestPrompt(false);
     setLoading(true);
-
     try {
       const res = await teacherLogin(email, password);
       const { access_token, is_admin } = res.data;
       saveSession(access_token, "teacher", is_admin);
-
-      if (is_admin) {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard/teacher");
-      }
+      navigate(is_admin ? "/admin" : "/dashboard/teacher");
     } catch (err) {
       const status = err.response?.status;
       const detail = err.response?.data?.detail || "Something went wrong.";
-
       if (status === 404) {
-        // No account exists for this email
         setShowRequestPrompt(true);
+        setError("No account found for this email.");
+      } else {
+        setError(detail);
       }
-      setError(detail);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <button
-        onClick={() => navigate("/")}
-        className="absolute top-8 left-8 flex items-center text-gray-500 hover:text-gray-900 transition-colors"
-      >
-        <ArrowLeft className="h-5 w-5 mr-2" /> Back to Gateway
-      </button>
+    <AuthShell
+      color="rust"
+      eyebrow="FOR FACULTY"
+      title={<>Faculty<br />Portal</>}
+      subtitle="Manage your schedule, approve student requests, and update your live availability."
+    >
+      <h2 className="font-display uppercase text-2xl mb-1">Sign In</h2>
+      <p className="font-body text-sm text-[#0E1B1E]/60 mb-8">Welcome back — enter your details.</p>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Faculty Portal
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Sign in to access your account
+      {error && (
+        <div className="mb-5 flex items-start gap-2 bg-[#F43493]/10 border border-[#F43493]/30 text-[#a02166] text-sm px-3 py-2.5">
+          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span className="font-body">{error}</span>
+        </div>
+      )}
+
+      <form className="space-y-5" onSubmit={handleLogin}>
+        <div>
+          <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">EMAIL ADDRESS</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="font-body mt-2 block w-full px-3 py-3 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none text-sm"
+            placeholder="you@college.edu"
+          />
+        </div>
+
+        <div>
+          <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">PASSWORD</label>
+          <div className="relative mt-2">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="font-body block w-full px-3 py-3 pr-10 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none text-sm"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#0E1B1E]/40 hover:text-[#0E1B1E]"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full font-mono text-sm tracking-widest bg-[#0E1B1E] text-white py-3.5 hover:bg-[#0E1B1E]/85 transition-colors disabled:opacity-60"
+        >
+          {loading ? "SIGNING IN..." : "SIGN IN"}
+        </button>
+      </form>
+
+      <div className="mt-8 pt-6 border-t border-[#0E1B1E]/10">
+        <p className="font-body text-sm text-[#0E1B1E]/70">
+          {showRequestPrompt ? "If you're a faculty member, " : "New faculty member? "}
+          <button
+            onClick={() => navigate("/teacher/request-access", { state: { email } })}
+            className="font-semibold text-[#0E1B1E] underline underline-offset-2"
+          >
+            Request Account Access
+          </button>
         </p>
       </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-2xl sm:px-10">
-          {error && (
-            <div className="mb-5 flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>{showRequestPrompt ? "No account found for this email." : error}</span>
-            </div>
-          )}
-
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email address</label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border bg-gray-50"
-                  placeholder="you@college.edu"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border bg-gray-50"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition-colors disabled:opacity-60"
-              style={{ backgroundColor: "#10b981" }}
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
-
-          {showRequestPrompt && (
-            <div className="mt-6 text-center border-t pt-5">
-              <p className="text-sm text-gray-600 mb-3">
-                No account found for this email. If you're a faculty member,
-                you can request access from the admin.
-              </p>
-              <button
-                onClick={() => navigate("/teacher/request-access", { state: { email } })}
-                className="text-emerald-600 font-semibold text-sm hover:underline"
-              >
-                Request Account Access &rarr;
-              </button>
-            </div>
-          )}
-
-          {!showRequestPrompt && (
-            <div className="mt-6 text-center border-t pt-5">
-              <p className="text-sm text-gray-600">
-                New faculty member?{" "}
-                <button
-                  onClick={() => navigate("/teacher/request-access", { state: { email } })}
-                  className="text-emerald-600 font-semibold hover:underline"
-                >
-                  Request Account Access
-                </button>
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    </AuthShell>
   );
 };
 
