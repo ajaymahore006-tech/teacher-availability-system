@@ -23,6 +23,8 @@ export const studentProfile = () => client.get("/api/student/profile");
 export const studentBookAppointment = (teacher_id, purpose) =>
   client.post("/api/student/book-appointment", { teacher_id, purpose });
 
+export const studentAppointments = () => client.get("/api/student/appointments");
+
 // ===================== TEACHER =====================
 export const teacherLogin = (email, password) =>
   client.post("/api/teacher/login", { email, password });
@@ -45,6 +47,13 @@ export const teacherAppointments = () => client.get("/api/teacher/appointments")
 
 export const teacherUpdateAppointment = (id, status) =>
   client.put(`/api/teacher/appointments/${id}`, { status });
+
+// ===================== SHARED (student or teacher, checked server-side) =====================
+export const getAppointmentMessages = (appointmentId) =>
+  client.get(`/api/appointments/${appointmentId}/messages`);
+
+export const sendAppointmentMessage = (appointmentId, content) =>
+  client.post(`/api/appointments/${appointmentId}/messages`, { content });
 
 // ===================== ADMIN =====================
 export const adminListRequests = (statusFilter) =>

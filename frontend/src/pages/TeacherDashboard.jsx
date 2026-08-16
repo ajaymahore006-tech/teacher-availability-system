@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Check, X, Circle } from "lucide-react";
+import { LogOut, Check, X, Circle, MessageSquare } from "lucide-react";
 import { teacherProfile, teacherAppointments, teacherUpdateAppointment, teacherUpdateStatus } from "../api/auth";
 import { clearSession } from "../api/session";
+import ChatPanel from "../components/ChatPanel";
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
@@ -12,6 +13,9 @@ const TeacherDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusLoading, setStatusLoading] = useState(false);
+
+  // NEW: which appointment's chat is open. null = closed.
+  const [chatAppointment, setChatAppointment] = useState(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -146,13 +150,23 @@ const TeacherDashboard = () => {
                         <p className="font-body text-sm">{a.student_email}</p>
                         <p className="font-body text-xs text-[#0E1B1E]/50">{a.purpose}</p>
                       </div>
-                      <span
-                        className={`font-mono text-[10px] px-2 py-1 ${
-                          a.status === "Approved" ? "bg-green-100 text-green-700" : "bg-[#F43493]/10 text-[#F43493]"
-                        }`}
-                      >
-                        {a.status.toUpperCase()}
-                      </span>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {a.status === "Approved" && (
+                          <button
+                            onClick={() => setChatAppointment(a)}
+                            className="flex items-center gap-1 font-mono text-[10px] tracking-widest text-[#0E1B1E]/60 hover:text-[#0E1B1E] border border-[#0E1B1E]/20 px-2.5 py-1.5"
+                          >
+                            <MessageSquare className="w-3 h-3" /> CHAT
+                          </button>
+                        )}
+                        <span
+                          className={`font-mono text-[10px] px-2 py-1 ${
+                            a.status === "Approved" ? "bg-green-100 text-green-700" : "bg-[#F43493]/10 text-[#F43493]"
+                          }`}
+                        >
+                          {a.status.toUpperCase()}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -161,6 +175,15 @@ const TeacherDashboard = () => {
           </>
         )}
       </main>
+
+      {chatAppointment && (
+        <ChatPanel
+          appointmentId={chatAppointment.id}
+          currentRole="teacher"
+          otherPartyLabel={chatAppointment.student_email}
+          onClose={() => setChatAppointment(null)}
+        />
+      )}
     </div>
   );
 };

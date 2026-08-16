@@ -6,12 +6,14 @@ from app.database import Base, engine, SessionLocal
 from app.routers import student as student_router
 from app.routers import teacher as teacher_router
 from app.routers import admin as admin_router
+from app.routers import message as message_router
 
 from app.models import student as student_model
 from app.models import request as request_model
 from app.models import teacher as teacher_model
 from app.models import department as department_model
 from app.models import teacher_request as teacher_request_model
+from app.models import message as message_model
 from app.models.appointment import Appointment as student_appointment
 import os
 from datetime import datetime, timedelta
@@ -40,6 +42,7 @@ app.add_middleware(
 app.include_router(student_router.router)
 app.include_router(teacher_router.router)
 app.include_router(admin_router.router)
+app.include_router(message_router.router)
 
 
 # --- 3. ADMIN BOOTSTRAP ---

@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Circle, ArrowUpRight, X, CheckCircle2 } from "lucide-react";
-import { studentProfile, teacherList, studentBookAppointment } from "../api/auth";
+import { LogOut, Circle, ArrowUpRight, X, CheckCircle2, MessageSquare } from "lucide-react";
+import { studentProfile, teacherList, studentBookAppointment, studentAppointments } from "../api/auth";
 import { clearSession } from "../api/session";
+import ChatPanel from "../components/ChatPanel";
 
 const DEPARTMENTS = { 1: "CSE", 2: "ECE" };
 
@@ -12,7 +13,10 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [teachers, setTeachers] = useState([]);
+  const [myAppointments, setMyAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [chatAppointment, setChatAppointment] = useState(null);
+  const [tab, setTab] = useState("appointments"); // "appointments" | "directory"
 
   // NEW: same "selected item" pattern as AdminPanel — null = booking panel closed
   const [selectedTeacher, setSelectedTeacher] = useState(null);
@@ -23,9 +27,10 @@ const StudentDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [profileRes, teacherRes] = await Promise.all([studentProfile(), teacherList()]);
+      const [profileRes, teacherRes, apptRes] = await Promise.all([studentProfile(), teacherList(), studentAppointments()]);
       setProfile(profileRes.data);
       setTeachers(teacherRes.data);
+      setMyAppointments(apptRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -49,6 +54,7 @@ const StudentDashboard = () => {
     try {
       await studentBookAppointment(selectedTeacher.id, purpose);
       setBookedMsg("Appointment requested! The teacher will review it soon.");
+      loadData();
     } catch (err) {
       setBookedMsg(err.response?.data?.detail || "Something went wrong. Please try again.");
     } finally {
@@ -90,32 +96,95 @@ const StudentDashboard = () => {
               <p className="font-body text-sm text-[#0E1B1E]/70 mt-1">Roll No: {profile?.roll_no}</p>
             </div>
 
-            {/* TEACHER LIST */}
-            <h3 className="font-mono text-xs tracking-widest text-[#0E1B1E]/50 mb-4">FACULTY DIRECTORY</h3>
-            <div className="border border-[#0E1B1E]/10">
-              {teachers.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => openBooking(t)}
-                  className="w-full flex items-center justify-between px-5 py-4 border-b border-[#0E1B1E]/10 last:border-0 hover:bg-[#6BCFE0]/10 text-left transition-colors"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Circle
-                        className={`w-2.5 h-2.5 ${
-                          t.status === "Available" ? "fill-green-500 text-green-500" : "fill-gray-400 text-gray-400"
-                        }`}
-                      />
-                      <span className="font-display uppercase text-sm">{t.name}</span>
-                    </div>
-                    <p className="font-body text-xs text-[#0E1B1E]/50 mt-1">
-                      {DEPARTMENTS[t.department_id] || "—"} · {t.status}
-                    </p>
-                  </div>
-                  <ArrowUpRight className="w-4 h-4 text-[#0E1B1E]/30 flex-shrink-0" />
-                </button>
-              ))}
+            <div className="flex gap-8 mb-8 border-b border-[#0E1B1E]/10">
+              <button
+                onClick={() => setTab("appointments")}
+                className={`font-mono text-xs tracking-widest pb-3 border-b-2 transition-colors ${tab === "appointments" ? "border-[#F43493] text-[#0E1B1E]" : "border-transparent text-[#0E1B1E]/40"
+                  }`}
+              >
+                MY APPOINTMENTS ({myAppointments.length})
+              </button>
+              <button
+                onClick={() => setTab("directory")}
+                className={`font-mono text-xs tracking-widest pb-3 border-b-2 transition-colors ${tab === "directory" ? "border-[#F43493] text-[#0E1B1E]" : "border-transparent text-[#0E1B1E]/40"
+                  }`}
+              >
+                FACULTY DIRECTORY ({teachers.length})
+              </button>
             </div>
+
+            {/* MY APPOINTMENTS */}
+            {tab === "appointments" && myAppointments.length > 0 && (
+              <>
+                <h3 className="font-mono text-xs tracking-widest text-[#0E1B1E]/50 mb-4">MY APPOINTMENTS</h3>
+                <div className="border border-[#0E1B1E]/10 mb-10">
+                  {myAppointments.map((a) => (
+                    <div key={a.id} className="flex items-center justify-between px-5 py-4 border-b border-[#0E1B1E]/10 last:border-0">
+                      <div>
+                        <p className="font-body text-sm">{a.purpose}</p>
+                        <p className="font-body text-xs text-[#0E1B1E]/50">Teacher ID: {a.teacher_id}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {a.status === "Approved" && (
+                          <button
+                            onClick={() => setChatAppointment(a)}
+                            className="flex items-center gap-1 font-mono text-[10px] tracking-widest text-[#0E1B1E]/60 hover:text-[#0E1B1E] border border-[#0E1B1E]/20 px-2.5 py-1.5"
+                          >
+                            <MessageSquare className="w-3 h-3" /> CHAT
+                          </button>
+                        )}
+                        <span
+                          className={`font-mono text-[10px] px-2 py-1 ${a.status === "Approved" ? "bg-green-100 text-green-700" : a.status === "Rejected" ? "bg-[#F43493]/10 text-[#F43493]" : "bg-[#0E1B1E]/5 text-[#0E1B1E]/60"
+                            }`}
+                        >
+                          {a.status.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* TEACHER LIST */}
+            {tab === "directory" && (
+              <>
+                <h3 className="font-mono text-xs tracking-widest text-[#0E1B1E]/50 mb-4">
+                  FACULTY DIRECTORY
+                </h3>
+
+                <div className="border border-[#0E1B1E]/10">
+                  {teachers.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => openBooking(t)}
+                      className="w-full flex items-center justify-between px-5 py-4 border-b border-[#0E1B1E]/10 last:border-0 hover:bg-[#6BCFE0]/10 text-left transition-colors"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Circle
+                            className={`w-2.5 h-2.5 ${t.status === "Available"
+                              ? "fill-green-500 text-green-500"
+                              : "fill-gray-400 text-gray-400"
+                              }`}
+                          />
+
+                          <span className="font-display uppercase text-sm">
+                            {t.name}
+                          </span>
+                        </div>
+
+                        <p className="font-body text-xs text-[#0E1B1E]/50 mt-1">
+                          {DEPARTMENTS[t.department_id] || "—"} · {t.status}
+                        </p>
+                      </div>
+
+                      <ArrowUpRight className="w-4 h-4 text-[#0E1B1E]/30 flex-shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </main>
@@ -169,6 +238,15 @@ const StudentDashboard = () => {
             </div>
           </div>
         </>
+      )}
+
+      {chatAppointment && (
+        <ChatPanel
+          appointmentId={chatAppointment.id}
+          currentRole="student"
+          otherPartyLabel={`Teacher ID: ${chatAppointment.teacher_id}`}
+          onClose={() => setChatAppointment(null)}
+        />
       )}
     </div>
   );
