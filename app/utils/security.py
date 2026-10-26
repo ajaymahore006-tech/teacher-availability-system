@@ -1,8 +1,7 @@
-# PLACE AT: app/utils/security.py  (REPLACES your existing file)
-
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
+import bcrypt
 from passlib.context import CryptContext
 import jwt
 
@@ -11,18 +10,31 @@ SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key_for_teacher_availability_
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Token expires in 1 hour
 
-# 2. Setup the password hashing context (using bcrypt)
+# 2. Setup fallback password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 # 3. Function to hash a password before saving to the database
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    # Truncate to 72 bytes as required by bcrypt specification
+    pw_bytes = password.encode("utf-8")[:72]
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pw_bytes, salt).decode("utf-8")
 
 
 # 4. Function to verify a plain password against a hashed one during login
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    if not plain_password or not hashed_password:
+        return False
+    pw_bytes = plain_password.encode("utf-8")[:72]
+    try:
+        hash_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(pw_bytes, hash_bytes)
+    except Exception:
+        try:
+            return pwd_context.verify(plain_password[:72], hashed_password)
+        except Exception:
+            return False
 
 
 # 5. Function to generate the JWT "VIP Wristband"
@@ -34,7 +46,7 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-# 6. NEW: generate a secure one-time setup token (for teacher "set password" links)
+# 6. Generate a secure one-time setup token (for teacher "set password" links)
 def generate_setup_token() -> str:
     return secrets.token_urlsafe(32)
 
@@ -92,9 +104,7 @@ def get_current_teacher(token: str = Depends(oauth2_scheme), db: Session = Depen
     return teacher
 
 
-# NEW: This guard checks if the token belongs to a teacher who is ALSO an admin.
-# We re-check is_admin against the DB (not just the token) so a demoted admin
-# is locked out immediately, without waiting for their token to expire.
+# Guard: checks if the token belongs to a teacher who is ALSO an admin.
 def get_current_admin(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
