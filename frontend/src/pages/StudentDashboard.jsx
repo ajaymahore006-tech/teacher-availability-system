@@ -13,6 +13,7 @@ import {
   Check,
   Award,
   Edit2,
+  AlertCircle,
 } from "lucide-react";
 import {
   studentProfile,
@@ -53,6 +54,8 @@ const StudentDashboard = () => {
   // Edit section modal
   const [editingSection, setEditingSection] = useState(false);
   const [newSection, setNewSection] = useState("A");
+  const [savingSection, setSavingSection] = useState(false);
+  const [sectionError, setSectionError] = useState("");
   const [copiedId, setCopiedId] = useState(null);
 
   const loadData = async (showSpinner = true) => {
@@ -107,14 +110,25 @@ const StudentDashboard = () => {
     }
   };
 
+  const openEditSectionModal = () => {
+    setNewSection(profile?.section || "A");
+    setSectionError("");
+    setEditingSection(true);
+  };
+
   const handleSaveSection = async (e) => {
     e.preventDefault();
+    setSavingSection(true);
+    setSectionError("");
     try {
       const res = await studentUpdateSection(newSection);
       setProfile(res.data);
       setEditingSection(false);
     } catch (err) {
       console.error(err);
+      setSectionError(err.response?.data?.detail || "Failed to update section. Please try again.");
+    } finally {
+      setSavingSection(false);
     }
   };
 
@@ -216,18 +230,24 @@ const StudentDashboard = () => {
                       </span>
                     )}
                   </div>
-                  <p className="font-body text-sm text-[#0E1B1E]/80 mt-1">
-                    Roll No: <span className="font-mono">{profile?.roll_no}</span>
-                    <span className="mx-2">·</span>
-                    Section: <span className="font-mono font-medium">{profile?.section ? `Section ${profile.section}` : "Not Assigned"}</span>
+                  <div className="flex items-center gap-2 flex-wrap font-body text-sm text-[#0E1B1E]/80 mt-1">
+                    <span>Roll No: <span className="font-mono font-medium">{profile?.roll_no}</span></span>
+                    <span>·</span>
+                    <span>
+                      Section:{" "}
+                      <span className="font-mono font-medium">
+                        {profile?.section ? `Section ${profile.section}` : "Not Assigned"}
+                      </span>
+                    </span>
                     <button
-                      onClick={() => setEditingSection(true)}
-                      className="ml-2 text-[#0E1B1E]/60 hover:text-[#0E1B1E] inline-flex items-center"
-                      title="Edit Section"
+                      onClick={openEditSectionModal}
+                      className="ml-1 text-[#0E1B1E] hover:underline inline-flex items-center gap-1 font-mono text-[11px] bg-white/40 hover:bg-white/70 px-2 py-0.5 border border-[#0E1B1E]/20"
+                      title="Set Section"
                     >
-                      <Edit2 className="w-3 h-3" />
+                      <Edit2 className="w-2.5 h-2.5" />
+                      {profile?.section ? "CHANGE" : "SET SECTION"}
                     </button>
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -498,28 +518,41 @@ const StudentDashboard = () => {
         <>
           <div className="fixed inset-0 bg-[#0E1B1E]/40 z-40" onClick={() => setEditingSection(false)} />
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F9FFFD] border border-[#0E1B1E]/20 p-6 sm:p-8 w-11/12 max-w-sm z-50 shadow-2xl">
-            <h3 className="font-display uppercase text-lg mb-2">Change Class Section</h3>
-            <p className="font-body text-xs text-[#0E1B1E]/60 mb-5">
-              Select your academic section so faculty can identify your class.
+            <h3 className="font-display uppercase text-lg mb-2">Select Your Section</h3>
+            <p className="font-body text-xs text-[#0E1B1E]/60 mb-4">
+              Faculty members and Class Representatives see this section to coordinate appointments and announcements.
             </p>
+
+            {sectionError && (
+              <div className="mb-4 flex items-start gap-2 bg-[#F43493]/10 border border-[#F43493]/30 text-[#a02166] text-xs p-3">
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>{sectionError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSaveSection} className="space-y-4">
-              <select
-                value={newSection}
-                onChange={(e) => setNewSection(e.target.value)}
-                className="w-full font-body text-sm p-3 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none"
-              >
-                {SECTIONS.map((sec) => (
-                  <option key={sec} value={sec}>
-                    Section {sec}
-                  </option>
-                ))}
-              </select>
-              <div className="flex gap-2">
+              <div>
+                <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">ACADEMIC SECTION</label>
+                <select
+                  value={newSection}
+                  onChange={(e) => setNewSection(e.target.value)}
+                  className="mt-1 w-full font-body text-sm p-3 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none"
+                >
+                  {SECTIONS.map((sec) => (
+                    <option key={sec} value={sec}>
+                      Section {sec}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 font-mono text-xs tracking-widest bg-[#0E1B1E] text-white py-3 hover:bg-[#0E1B1E]/85 transition-colors"
+                  disabled={savingSection}
+                  className="flex-1 font-mono text-xs tracking-widest bg-[#0E1B1E] text-white py-3 hover:bg-[#0E1B1E]/85 transition-colors disabled:opacity-50"
                 >
-                  SAVE SECTION
+                  {savingSection ? "SAVING..." : "SAVE SECTION"}
                 </button>
                 <button
                   type="button"

@@ -15,6 +15,25 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
+// Intercept 401 Unauthorized responses to clear stale sessions and prevent blank dashboard states
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("dfa_token");
+      localStorage.removeItem("dfa_role");
+      localStorage.removeItem("dfa_is_admin");
+      if (
+        window.location.pathname.startsWith("/dashboard") ||
+        window.location.pathname.startsWith("/admin")
+      ) {
+        window.location.href = "/";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export function getWsUrl(path) {
   const httpUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
   const wsProtocol = httpUrl.startsWith("https") ? "wss:" : "ws:";

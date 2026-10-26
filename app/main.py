@@ -1,22 +1,17 @@
+import os
+from datetime import datetime, timedelta, timezone
+from sqlalchemy import inspect, text
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.database import Base, engine, SessionLocal
+import app.models  # Ensures all SQLAlchemy models are registered and relationships resolved
+
 from app.routers import student as student_router
 from app.routers import teacher as teacher_router
 from app.routers import admin as admin_router
 from app.routers import message as message_router
-
-from app.models import student as student_model
-from app.models import request as request_model
-from app.models import teacher as teacher_model
-from app.models import department as department_model
-from app.models import teacher_request as teacher_request_model
-from app.models import message as message_model
-from app.models.appointment import Appointment as student_appointment
-from app.models.cr_message import CRMessage as cr_message_model
-import os
-from datetime import datetime, timedelta, timezone
-from sqlalchemy import inspect, text
 
 app = FastAPI(
     title="Digital Faculty Assistant API",
@@ -25,7 +20,8 @@ app = FastAPI(
 
 # --- 1. MIDDLEWARE ---
 default_origins = "http://localhost:8000,http://127.0.0.1:8000,http://localhost:5173,http://127.0.0.1:5173"
-origins = os.getenv("CORS_ORIGINS", default_origins).split(",")
+raw_origins = os.getenv("CORS_ORIGINS", default_origins)
+origins = list(set([o.strip() for o in (raw_origins + "," + default_origins).split(",") if o.strip()]))
 
 app.add_middleware(
     CORSMiddleware,
@@ -86,10 +82,14 @@ def _ensure_schema_columns():
 @app.on_event("startup")
 def startup_init():
     try:
-        Base.metadata.create_all(bind=engine)
         _ensure_schema_columns()
     except Exception as e:
-        print(f"[Warning] Could not initialize database tables on startup: {e}")
+        print(f"[Warning] Could not ensure schema columns: {e}")
+
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"[Warning] Could not initialize database tables: {e}")
 
     # Admin bootstrap
     from app.models.teacher import Teacher

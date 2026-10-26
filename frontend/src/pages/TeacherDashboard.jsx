@@ -40,6 +40,7 @@ const TeacherDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [statusLoading, setStatusLoading] = useState(false);
   const [chatAppointment, setChatAppointment] = useState(null);
+  const [loadError, setLoadError] = useState("");
 
   // Tab: "appointments" | "cr_management"
   const [mainTab, setMainTab] = useState("appointments");
@@ -61,17 +62,40 @@ const TeacherDashboard = () => {
 
   const loadData = async (showSpinner = true) => {
     if (showSpinner) setLoading(true);
+    setLoadError("");
     try {
-      const [profileRes, apptRes, crRes] = await Promise.all([
+      const [profileResult, apptResult, crResult] = await Promise.allSettled([
         teacherProfile(),
         teacherAppointments(),
         teacherListCRs(),
       ]);
-      setProfile(profileRes.data);
-      setAppointments(apptRes.data);
-      setCrs(crRes.data || []);
+
+      if (profileResult.status === "fulfilled") {
+        setProfile(profileResult.value.data);
+      } else {
+        console.error("Profile load error:", profileResult.reason);
+        const detail = profileResult.reason?.response?.data?.detail;
+        if (profileResult.reason?.response?.status === 401) {
+          setLoadError("Your session has expired. Please log out and sign in again.");
+        } else {
+          setLoadError(detail || "Could not load faculty profile. Please try reloading.");
+        }
+      }
+
+      if (apptResult.status === "fulfilled") {
+        setAppointments(apptResult.value.data || []);
+      } else {
+        console.error("Appointments load error:", apptResult.reason);
+      }
+
+      if (crResult.status === "fulfilled") {
+        setCrs(crResult.value.data || []);
+      } else {
+        console.error("CRs load error:", crResult.reason);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Dashboard error:", err);
+      setLoadError("An unexpected error occurred while loading dashboard data.");
     } finally {
       if (showSpinner) setLoading(false);
     }
@@ -252,6 +276,21 @@ const TeacherDashboard = () => {
       </header>
 
       <main className="max-w-4xl mx-auto px-5 sm:px-8 py-8">
+        {loadError && (
+          <div className="mb-6 p-4 bg-[#F43493]/10 border border-[#F43493] text-[#0E1B1E] flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-[#F43493] flex-shrink-0" />
+              <span className="font-body text-xs">{loadError}</span>
+            </div>
+            <button
+              onClick={() => loadData(true)}
+              className="font-mono text-xs text-[#F43493] underline hover:opacity-80 flex-shrink-0"
+            >
+              RETRY
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <p className="font-mono text-sm text-[#0E1B1E]/50">LOADING...</p>
         ) : (
@@ -260,15 +299,17 @@ const TeacherDashboard = () => {
             <div className="bg-[#A05341] text-white p-6 sm:p-8 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div>
                 <p className="font-mono text-xs tracking-widest text-white/70 mb-1">FACULTY PORTAL</p>
-                <h2 className="font-display uppercase text-2xl sm:text-3xl">{profile?.name}</h2>
+                <h2 className="font-display uppercase text-2xl sm:text-3xl">
+                  {profile?.name || "FACULTY MEMBER"}
+                </h2>
                 <p className="font-body text-sm text-white/80 mt-1">
-                  ID: {profile?.id} · {profile?.staff_type}
+                  ID: <span className="font-mono">{profile?.id || "—"}</span> · {profile?.staff_type || "Teaching"}
                 </p>
               </div>
 
               <button
                 onClick={handleToggleStatus}
-                disabled={statusLoading}
+                disabled={statusLoading || !profile}
                 className="flex items-center gap-2 bg-white text-[#0E1B1E] font-mono text-xs tracking-widest px-4 py-3 hover:bg-white/90 disabled:opacity-60 flex-shrink-0 transition-colors shadow-sm"
               >
                 <Circle
