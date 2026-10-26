@@ -1,8 +1,6 @@
-# PLACE AT: app/routers/admin.py  (NEW FILE)
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from app.database import get_db
@@ -11,20 +9,21 @@ from app.models.teacher_request import TeacherAccessRequest
 from app.schemas.teacher import TeacherPublic, TeacherAdminCreate
 from app.schemas.teacher_request import TeacherAccessRequestResponse
 from app.utils.email_sender import send_teacher_setup_email, send_admin_status_email
-from app.utils.security import get_current_admin, generate_setup_token, get_password_hash
+from app.utils.security import get_current_admin, generate_setup_token
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 
 def _generate_next_teacher_id(db: Session) -> str:
-    last_teacher = db.query(Teacher).order_by(Teacher.id.desc()).first()
-    if last_teacher and last_teacher.id.startswith("T"):
-        try:
-            last_num = int(last_teacher.id[1:])
-            return f"T{last_num + 1:03d}"
-        except ValueError:
-            pass
-    return "T001"
+    teachers = db.query(Teacher.id).filter(Teacher.id.like("T%")).all()
+    max_num = 0
+    for (t_id,) in teachers:
+        if t_id and t_id.startswith("T") and t_id[1:].isdigit():
+            try:
+                max_num = max(max_num, int(t_id[1:]))
+            except ValueError:
+                pass
+    return f"T{max_num + 1:03d}"
 
 
 # ==========================================
@@ -32,7 +31,7 @@ def _generate_next_teacher_id(db: Session) -> str:
 # ==========================================
 @router.get("/requests", response_model=List[TeacherAccessRequestResponse])
 def list_requests(
-    status_filter: Optional[str] = None,  # e.g. "Pending", "Approved", "Rejected"
+    status_filter: Optional[str] = None,
     db: Session = Depends(get_db),
     admin: Teacher = Depends(get_current_admin),
 ):
@@ -61,26 +60,26 @@ def approve_request(request_id: int, db: Session = Depends(get_db), admin: Teach
     if req.status != "Pending":
         raise HTTPException(status_code=400, detail=f"This request was already {req.status.lower()}.")
 
-    # Double-check no teacher account was created for this email in the meantime
     existing = db.query(Teacher).filter(Teacher.email == req.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="A teacher account already exists for this email.")
 
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     setup_token = generate_setup_token()
     new_teacher = Teacher(
         id=_generate_next_teacher_id(db),
         name=req.name,
         email=req.email,
         department_id=req.department_id,
-        password=None,  # NOT set yet — teacher sets it via the emailed link
+        password=None,
         setup_token=setup_token,
-        setup_token_expires=datetime.utcnow() + timedelta(hours=24),
+        setup_token_expires=now_utc + timedelta(hours=24),
         staff_type=req.staff_type,
     )
     db.add(new_teacher)
 
     req.status = "Approved"
-    req.resolved_at = datetime.utcnow()
+    req.resolved_at = now_utc
     db.commit()
 
     email_sent = send_teacher_setup_email(new_teacher.email, setup_token)
@@ -100,8 +99,9 @@ def reject_request(request_id: int, db: Session = Depends(get_db), admin: Teache
     if req.status != "Pending":
         raise HTTPException(status_code=400, detail=f"This request was already {req.status.lower()}.")
 
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     req.status = "Rejected"
-    req.resolved_at = datetime.utcnow()
+    req.resolved_at = now_utc
     db.commit()
 
     return {"message": "Request rejected."}
@@ -119,11 +119,11 @@ def list_teachers(db: Session = Depends(get_db), admin: Teacher = Depends(get_cu
 def create_teacher_directly(
     payload: TeacherAdminCreate, db: Session = Depends(get_db), admin: Teacher = Depends(get_current_admin)
 ):
-    """Optional shortcut: admin creates a teacher without them requesting access first."""
     existing = db.query(Teacher).filter(Teacher.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="A teacher account already exists for this email.")
 
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     setup_token = generate_setup_token()
     new_teacher = Teacher(
         id=_generate_next_teacher_id(db),
@@ -132,7 +132,7 @@ def create_teacher_directly(
         department_id=payload.department_id,
         password=None,
         setup_token=setup_token,
-        setup_token_expires=datetime.utcnow() + timedelta(hours=24),
+        setup_token_expires=now_utc + timedelta(hours=24),
         staff_type=payload.staff_type,
     )
     db.add(new_teacher)

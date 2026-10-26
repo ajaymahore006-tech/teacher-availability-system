@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String
-from app.database import Base
+from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
+from app.database import Base
 
 
 class Student(Base):
@@ -10,6 +10,7 @@ class Student(Base):
     name = Column(String(100), nullable=False)
     password = Column(String(255), nullable=False)
     roll_no = Column(Integer, nullable=False, unique=True)
+    section = Column(String(20), nullable=True)
+    is_cr = Column(Boolean, default=False, nullable=False)
 
-    # Add this line inside your Student class in models/student.py
     request = relationship("Request", back_populates="student", cascade="all, delete-orphan")

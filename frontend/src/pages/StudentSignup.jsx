@@ -1,10 +1,11 @@
-// PLACE AT: src/pages/StudentSignup.jsx  (NEW FILE)
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { studentSendOtp, studentSignup } from "../api/auth";
 import { saveSession } from "../api/session";
+import AuthShell from "../components/AuthShell";
+
+const SECTIONS = ["A", "B", "C", "D"];
 
 const StudentSignup = () => {
   const navigate = useNavigate();
@@ -14,16 +15,10 @@ const StudentSignup = () => {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [section, setSection] = useState("A");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState("");
-
-  // Auto-extract MIS number from the email prefix (purely for display —
-  // the backend independently re-derives this from the verified email too)
-  const misNumber = (() => {
-    const match = email.match(/^(\d+)@/);
-    return match ? match[1] : "";
-  })();
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
@@ -44,7 +39,7 @@ const StudentSignup = () => {
     setError("");
     setLoading(true);
     try {
-      const res = await studentSignup({ email, otp, name, password });
+      const res = await studentSignup({ email, otp, name, password, section });
       saveSession(res.data.access_token, "student", false);
       navigate("/dashboard/student");
     } catch (err) {
@@ -55,131 +50,146 @@ const StudentSignup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <button
-        onClick={() => navigate("/login/student")}
-        className="absolute top-8 left-8 flex items-center text-gray-500 hover:text-gray-900 transition-colors"
-      >
-        <ArrowLeft className="h-5 w-5 mr-2" /> Back to Login
-      </button>
+    <AuthShell
+      color="sky"
+      eyebrow="STUDENT REGISTRATION"
+      title={<>Create<br />Account</>}
+      subtitle="Join the Digital Faculty Assistant portal to book appointments and stay connected with faculty and CRs."
+      backTo="/login/student"
+      backLabel="Back to Login"
+    >
+      <h2 className="font-display uppercase text-2xl mb-1">
+        {step === 1 ? "Student Signup" : "Verify OTP"}
+      </h2>
+      <p className="font-body text-sm text-[#0E1B1E]/60 mb-6">
+        {step === 1 ? "Use your official college email ID and specify your section." : `Enter the 6-digit code sent to ${email}`}
+      </p>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Create Account</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          {step === 1 ? "Use your college email to register" : "Enter the OTP sent to your email"}
+      {error && (
+        <div className="mb-5 flex items-start gap-2 bg-[#F43493]/10 border border-[#F43493]/30 text-[#a02166] text-sm px-3 py-2.5">
+          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span className="font-body">{error}</span>
+        </div>
+      )}
+
+      {step === 1 ? (
+        <form className="space-y-4" onSubmit={handleSendOtp} autoComplete="off">
+          <div>
+            <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">FULL NAME</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="font-body mt-1 block w-full px-3 py-3 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none text-sm"
+              placeholder="Your full name"
+            />
+          </div>
+
+          <div>
+            <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">COLLEGE EMAIL</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="font-body mt-1 block w-full px-3 py-3 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none text-sm"
+              placeholder="123456789@cse.iiitp.ac.in"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">CLASS SECTION</label>
+              <select
+                value={section}
+                onChange={(e) => setSection(e.target.value)}
+                className="font-body mt-1 block w-full px-3 py-3 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none text-sm"
+              >
+                {SECTIONS.map((sec) => (
+                  <option key={sec} value={sec}>
+                    Section {sec}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">PASSWORD</label>
+              <div className="relative mt-1">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="font-body block w-full px-3 py-3 pr-10 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none text-sm"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#0E1B1E]/40 hover:text-[#0E1B1E]"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full font-mono text-sm tracking-widest bg-[#0E1B1E] text-white py-3.5 hover:bg-[#0E1B1E]/85 transition-colors disabled:opacity-60 mt-2"
+          >
+            {loading ? "SENDING OTP..." : "SEND VERIFICATION CODE"}
+          </button>
+        </form>
+      ) : (
+        <form className="space-y-4" onSubmit={handleVerifyAndSignup} autoComplete="off">
+          <div>
+            <label className="font-mono text-xs tracking-widest text-[#0E1B1E]/60">6-DIGIT OTP CODE</label>
+            <input
+              type="text"
+              required
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className="font-mono text-center tracking-widest text-lg mt-1 block w-full px-3 py-3 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none"
+              placeholder="123456"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || otp.length < 6}
+            className="w-full font-mono text-sm tracking-widest bg-[#0E1B1E] text-white py-3.5 hover:bg-[#0E1B1E]/85 transition-colors disabled:opacity-60 mt-2"
+          >
+            {loading ? "VERIFYING..." : "COMPLETE SIGNUP"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="w-full font-mono text-xs tracking-widest text-[#0E1B1E]/60 hover:text-[#0E1B1E] text-center pt-2"
+          >
+            ← EDIT DETAILS / RESEND
+          </button>
+        </form>
+      )}
+
+      <div className="mt-8 pt-6 border-t border-[#0E1B1E]/10">
+        <p className="font-body text-sm text-[#0E1B1E]/70">
+          Already have an account?{" "}
+          <button
+            onClick={() => navigate("/login/student")}
+            className="font-medium text-[#0E1B1E] underline hover:opacity-75"
+          >
+            Sign In
+          </button>
         </p>
       </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl border border-gray-100 sm:rounded-2xl sm:px-10">
-          {error && (
-            <div className="mb-5 flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {step === 1 ? (
-            <form className="space-y-5" onSubmit={handleSendOtp}>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">College Email</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="123456789@cse.iiitp.ac.in"
-                />
-              </div>
-
-              {/* MIS auto-fill preview — read-only, purely informational */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">MIS Number</label>
-                <input
-                  type="text"
-                  readOnly
-                  value={misNumber}
-                  placeholder="Auto-filled from your email"
-                  className="mt-1 block w-full px-3 py-3 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 sm:text-sm cursor-not-allowed"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Create Password</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 block w-full px-3 py-3 pr-10 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Min. 8 characters"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5 mt-1" /> : <Eye className="h-5 w-5 mt-1" />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition-colors disabled:opacity-60"
-                style={{ backgroundColor: "#2563eb" }}
-              >
-                {loading ? "Sending OTP..." : "Send OTP Verification"}
-              </button>
-            </form>
-          ) : (
-            <form className="space-y-5" onSubmit={handleVerifyAndSignup}>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 text-center">
-                  Enter OTP
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg bg-gray-50 text-center tracking-widest text-lg font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="123456"
-                  maxLength={6}
-                />
-                <p className="text-xs text-gray-500 mt-2 text-center">Check your college email inbox.</p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white transition-colors disabled:opacity-60"
-                style={{ backgroundColor: "#28a745" }}
-              >
-                {loading ? "Verifying..." : "Verify & Create Account"}
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
+    </AuthShell>
   );
 };
 

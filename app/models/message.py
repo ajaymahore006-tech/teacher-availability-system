@@ -1,8 +1,6 @@
-# PLACE AT: app/models/message.py  (NEW FILE)
-
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from app.database import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Message(Base):
@@ -16,4 +14,4 @@ class Message(Base):
     sender_email = Column(String(191), nullable=False)
 
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.utcnow())
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

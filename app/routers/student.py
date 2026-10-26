@@ -1,19 +1,41 @@
-# PLACE AT: app/routers/student.py  (REPLACES your existing file)
-
 import re
+import random
+from datetime import datetime, timedelta, timezone
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+
 from app.database import get_db
 from app.models.student import Student
-from app.schemas.student import StudentLogin, StudentResponse, StudentPasswordReset
-from app.utils.security import verify_password, create_access_token, get_password_hash, get_current_user_email, get_current_student
-from app.utils.email_sender import send_otp_email
-import random
-from datetime import datetime, timedelta
-from app.schemas.otp import OTPRequest, StudentSignupWithOTP
+from app.models.appointment import Appointment
+from app.models.message import Message
 from app.models.otp import OTPCode
+from app.models.cr_message import CRMessage
+from app.models.teacher import Teacher
+from app.schemas.student import StudentLogin, StudentResponse, StudentPasswordReset, StudentUpdateSection
+from app.schemas.appointment import AppointmentCreate, AppointmentResponse
+from app.schemas.otp import OTPRequest, StudentSignupWithOTP
+from app.schemas.cr_message import CRMessageResponse
+from app.utils.security import (
+    verify_password,
+    create_access_token,
+    get_password_hash,
+    get_current_user_email,
+    get_current_student,
+)
+from app.utils.email_sender import send_otp_email
 
 router = APIRouter(prefix="/api/student", tags=["Student Authentication"])
+
+
+def _to_naive_utc(dt):
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
 
 
 @router.post("/send-otp")
@@ -26,7 +48,7 @@ def send_registration_otp(request: OTPRequest, db: Session = Depends(get_db)):
         )
 
     otp_code = str(random.randint(100000, 999999))
-    expiration_time = datetime.now() + timedelta(minutes=10)
+    expiration_time = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=10)
 
     existing_otp_record = db.query(OTPCode).filter(OTPCode.email == request.email).first()
     if existing_otp_record:
@@ -56,14 +78,13 @@ def register_student(request: StudentSignupWithOTP, db: Session = Depends(get_db
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No OTP requested for this email.")
     if otp_record.otp != request.otp:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP code.")
-    if otp_record.expires_at < datetime.now():
+
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    if _to_naive_utc(otp_record.expires_at) < now_utc:
         db.delete(otp_record)
         db.commit()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="OTP has expired. Please request a new one.")
 
-    # NEW: Derive the MIS/roll number from the email itself (e.g. "1124115120@cse.iiitp.ac.in" -> 1124115120)
-    # We do this server-side (not trusting any client-supplied value) since the email
-    # was already validated against the college domain pattern by the OTPRequest schema.
     match = re.match(r"^(\d+)@", request.email)
     if not match:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Could not extract MIS number from email.")
@@ -74,11 +95,15 @@ def register_student(request: StudentSignupWithOTP, db: Session = Depends(get_db
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This roll number is already registered.")
 
     hashed_password = get_password_hash(request.password)
+    cleaned_section = request.section.strip().upper() if request.section and request.section.strip() else None
+
     new_student = Student(
         email=request.email,
         password=hashed_password,
         name=request.name,
         roll_no=derived_roll_no,
+        section=cleaned_section,
+        is_cr=False,
     )
 
     db.add(new_student)
@@ -112,7 +137,7 @@ def forgot_password(request: OTPRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account with this email does not exist.")
 
     otp_code = str(random.randint(100000, 999999))
-    expiration_time = datetime.now() + timedelta(minutes=10)
+    expiration_time = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=10)
 
     existing_otp_record = db.query(OTPCode).filter(OTPCode.email == request.email).first()
     if existing_otp_record:
@@ -143,7 +168,9 @@ def reset_password(request: StudentPasswordReset, db: Session = Depends(get_db))
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found.")
     if not otp_record or otp_record.otp != request.otp:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or missing OTP.")
-    if otp_record.expires_at < datetime.now():
+
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    if _to_naive_utc(otp_record.expires_at) < now_utc:
         db.delete(otp_record)
         db.commit()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="OTP has expired.")
@@ -158,14 +185,9 @@ def reset_password(request: StudentPasswordReset, db: Session = Depends(get_db))
 @router.get("/dashboard")
 def student_dashboard(current_email: str = Depends(get_current_user_email)):
     return {
-        "message": "Welcome to the VIP area!",
+        "message": "Welcome to the Student Dashboard",
         "your_email": current_email,
-        "secret_data": "Here is the data only logged-in students can see.",
     }
-
-
-from app.models.appointment import Appointment
-from app.schemas.appointment import AppointmentCreate
 
 
 @router.post("/book-appointment")
@@ -192,8 +214,16 @@ def get_student_profile(current_student: Student = Depends(get_current_student))
     return current_student
 
 
-from typing import List
-from app.schemas.appointment import AppointmentResponse
+@router.put("/section", response_model=StudentResponse)
+def update_my_section(
+    payload: StudentUpdateSection,
+    db: Session = Depends(get_db),
+    current_student: Student = Depends(get_current_student),
+):
+    current_student.section = payload.section.strip().upper()
+    db.commit()
+    db.refresh(current_student)
+    return current_student
 
 
 @router.get("/appointments", response_model=List[AppointmentResponse])
@@ -201,9 +231,74 @@ def get_my_appointments(
     db: Session = Depends(get_db),
     current_student: Student = Depends(get_current_student),
 ):
-    return (
+    appointments = (
         db.query(Appointment)
         .filter(Appointment.student_email == current_student.email)
         .order_by(Appointment.created_at.desc())
         .all()
     )
+
+    for appt in appointments:
+        latest_teacher_msg = (
+            db.query(func.max(Message.created_at))
+            .filter(Message.appointment_id == appt.id, Message.sender_role == "teacher")
+            .scalar()
+        )
+        t_msg = _to_naive_utc(latest_teacher_msg)
+        s_read = _to_naive_utc(appt.student_last_read)
+        appt.has_unread = bool(t_msg) and (s_read is None or t_msg > s_read)
+
+        appt.student_name = current_student.name
+        appt.student_roll_no = current_student.roll_no
+        appt.student_section = current_student.section
+        appt.student_is_cr = current_student.is_cr
+
+    return appointments
+
+
+# ==========================================
+# CR MESSAGES / ANNOUNCEMENTS FOR STUDENTS
+# ==========================================
+@router.get("/cr-messages", response_model=List[CRMessageResponse])
+def get_my_cr_messages(
+    db: Session = Depends(get_db),
+    current_student: Student = Depends(get_current_student),
+):
+    messages = (
+        db.query(CRMessage)
+        .filter(CRMessage.student_email == current_student.email)
+        .order_by(CRMessage.created_at.desc())
+        .all()
+    )
+
+    teacher_ids = {m.teacher_id for m in messages}
+    teachers_map = (
+        {t.id: t.name for t in db.query(Teacher).filter(Teacher.id.in_(teacher_ids)).all()}
+        if teacher_ids
+        else {}
+    )
+
+    for m in messages:
+        m.teacher_name = teachers_map.get(m.teacher_id, m.teacher_id)
+        m.student_name = current_student.name
+        m.student_section = current_student.section
+
+    return messages
+
+
+@router.put("/cr-messages/{message_id}/read")
+def mark_cr_message_read(
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_student: Student = Depends(get_current_student),
+):
+    msg = (
+        db.query(CRMessage)
+        .filter(CRMessage.id == message_id, CRMessage.student_email == current_student.email)
+        .first()
+    )
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    msg.is_read = True
+    db.commit()
+    return {"message": "Marked as read"}

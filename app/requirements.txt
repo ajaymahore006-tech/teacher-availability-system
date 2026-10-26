@@ -1,5 +1,6 @@
 fastapi==0.140.13
 passlib==1.7.4
+bcrypt>=4.0.0
 pydantic==2.13.4
 PyJWT==2.13.0
 python-dotenv==1.2.2
@@ -8,3 +9,4 @@ SQLAlchemy==2.0.51
 uvicorn
 pymysql
 email-validator
+websockets

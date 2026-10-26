@@ -1,5 +1,3 @@
-// PLACE AT: src/api/client.js  (NEW FILE)
-
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -16,5 +14,12 @@ client.interceptors.request.use((config) => {
   }
   return config;
 });
+
+export function getWsUrl(path) {
+  const httpUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+  const wsProtocol = httpUrl.startsWith("https") ? "wss:" : "ws:";
+  const host = httpUrl.replace(/^https?:\/\//, "");
+  return `${wsProtocol}//${host}${path}`;
+}
 
 export default client;
