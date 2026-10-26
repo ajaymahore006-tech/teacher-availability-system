@@ -5,7 +5,7 @@ import { getWsUrl } from "../api/client";
 import { getToken } from "../api/session";
 
 // currentRole: "student" | "teacher" — used to decide which side to align bubbles on
-const ChatPanel = ({ appointmentId, currentRole, otherPartyLabel, onClose }) => {
+const ChatPanel = ({ appointmentId, currentRole, otherPartyLabel, appointmentPurpose, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -14,11 +14,17 @@ const ChatPanel = ({ appointmentId, currentRole, otherPartyLabel, onClose }) => 
   const [isOtherPartyTyping, setIsOtherPartyTyping] = useState(false);
 
   const bottomRef = useRef(null);
+  const inputRef = useRef(null);
   const wsRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const isTypingRef = useRef(false);
 
   const otherRole = currentRole === "student" ? "teacher" : "student";
+
+  // Auto-focus input on open so user can immediately type reply
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [appointmentId]);
 
   // 1. Initial HTTP fetch of history
   const loadMessages = async () => {
@@ -207,6 +213,18 @@ const ChatPanel = ({ appointmentId, currentRole, otherPartyLabel, onClose }) => 
           </button>
         </div>
 
+        {/* REQUEST PURPOSE CONTEXT */}
+        {appointmentPurpose && (
+          <div className="px-6 py-2.5 bg-[#FAF6EE] border-b border-[#0E1B1E]/10 flex items-start gap-2">
+            <span className="font-mono text-[9px] text-[#0E1B1E]/50 uppercase tracking-widest flex-shrink-0 mt-0.5">
+              PURPOSE:
+            </span>
+            <p className="font-body text-xs text-[#0E1B1E]/80 italic line-clamp-2">
+              "{appointmentPurpose}"
+            </p>
+          </div>
+        )}
+
         {/* MESSAGE LIST */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3">
           {messages.length === 0 && (
@@ -256,19 +274,47 @@ const ChatPanel = ({ appointmentId, currentRole, otherPartyLabel, onClose }) => 
           <div ref={bottomRef} />
         </div>
 
+        {/* QUICK REPLIES FOR FACULTY */}
+        {currentRole === "teacher" && (
+          <div className="px-4 py-2 border-t border-[#0E1B1E]/10 bg-[#FAF6EE]/40 flex flex-wrap items-center gap-1.5">
+            <span className="font-mono text-[9px] text-[#0E1B1E]/50 uppercase tracking-widest mr-1">
+              REPLY:
+            </span>
+            {[
+              "Approved! Please visit my office.",
+              "Approved. See you after class.",
+              "Approved! Let's discuss your project.",
+            ].map((quickText, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  setText(quickText);
+                  inputRef.current?.focus();
+                }}
+                className="font-body text-[11px] bg-white hover:bg-[#0E1B1E] hover:text-white text-[#0E1B1E]/80 border border-[#0E1B1E]/20 px-2 py-0.5 transition-colors shadow-2xs"
+              >
+                {quickText}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* INPUT FORM */}
         <form onSubmit={handleSend} className="p-4 border-t border-[#0E1B1E]/10 flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={text}
             onChange={handleInputChange}
-            placeholder="Type a message..."
+            placeholder={currentRole === "teacher" ? "Reply to student..." : "Type a message..."}
             className="flex-1 font-body text-sm px-3 py-2.5 border border-[#0E1B1E]/20 bg-transparent focus:border-[#0E1B1E] focus:outline-none"
           />
           <button
             type="submit"
             disabled={sending || !text.trim()}
             className="bg-[#0E1B1E] text-white px-4 py-2.5 hover:bg-[#0E1B1E]/85 disabled:opacity-40 transition-colors flex items-center justify-center"
+            title="Send reply"
           >
             <Send className="w-4 h-4" />
           </button>

@@ -627,6 +627,7 @@ const StudentDashboard = () => {
             teachers.find((t) => t.id === chatAppointment.teacher_id)?.name ||
             `Faculty ID: ${chatAppointment.teacher_id}`
           }
+          appointmentPurpose={chatAppointment.purpose}
           onClose={() => {
             setChatAppointment(null);
             loadData(false);

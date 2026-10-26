@@ -40,6 +40,7 @@ const TeacherDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [statusLoading, setStatusLoading] = useState(false);
   const [chatAppointment, setChatAppointment] = useState(null);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
   const [loadError, setLoadError] = useState("");
 
   // Tab: "appointments" | "cr_management"
@@ -124,12 +125,31 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleAppointmentAction = async (id, status) => {
+  const handleAppointmentAction = async (appointment, status) => {
     try {
-      await teacherUpdateAppointment(id, status);
-      loadData(false);
+      setActionLoadingId(appointment.id);
+      await teacherUpdateAppointment(appointment.id, status);
+
+      if (status === "Approved") {
+        const approvedAppt = {
+          ...appointment,
+          status: "Approved",
+        };
+        // Instantly transition state so appointment moves from pending to approved
+        setAppointments((prev) =>
+          prev.map((item) => (item.id === appointment.id ? approvedAppt : item))
+        );
+        // Directly open the chat section so the faculty can reply immediately!
+        setChatAppointment(approvedAppt);
+      }
+
+      await loadData(false);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to update appointment:", err);
+      const detail = err.response?.data?.detail || "Failed to update appointment status.";
+      setLoadError(detail);
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -391,14 +411,18 @@ const TeacherDashboard = () => {
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
                           <button
-                            onClick={() => handleAppointmentAction(a.id, "Approved")}
-                            className="flex items-center gap-1 bg-[#0E1B1E] text-white font-mono text-xs tracking-widest px-4 py-2.5 hover:bg-[#0E1B1E]/85 transition-colors"
+                            onClick={() => handleAppointmentAction(a, "Approved")}
+                            disabled={actionLoadingId === a.id}
+                            className="flex items-center gap-1.5 bg-[#0E1B1E] text-white font-mono text-xs tracking-widest px-4 py-2.5 hover:bg-[#0E1B1E]/85 transition-colors disabled:opacity-50"
+                            title="Approve request and directly open chat to reply to student"
                           >
-                            <Check className="w-3.5 h-3.5" /> APPROVE
+                            <Check className="w-3.5 h-3.5" />
+                            {actionLoadingId === a.id ? "APPROVING..." : "APPROVE & REPLY"}
                           </button>
                           <button
-                            onClick={() => handleAppointmentAction(a.id, "Rejected")}
-                            className="flex items-center gap-1 border border-[#F43493] text-[#F43493] font-mono text-xs tracking-widest px-4 py-2.5 hover:bg-[#F43493]/10 transition-colors"
+                            onClick={() => handleAppointmentAction(a, "Rejected")}
+                            disabled={actionLoadingId === a.id}
+                            className="flex items-center gap-1.5 border border-[#F43493] text-[#F43493] font-mono text-xs tracking-widest px-4 py-2.5 hover:bg-[#F43493]/10 transition-colors disabled:opacity-50"
                           >
                             <X className="w-3.5 h-3.5" /> REJECT
                           </button>
@@ -772,6 +796,7 @@ const TeacherDashboard = () => {
               ? `${chatAppointment.student_name} (${chatAppointment.student_section ? `Sec ${chatAppointment.student_section}` : chatAppointment.student_email})`
               : chatAppointment.student_email
           }
+          appointmentPurpose={chatAppointment.purpose}
           onClose={() => {
             setChatAppointment(null);
             loadData(false);
